@@ -1,4 +1,4 @@
 package it.unicam.cs.hackhub.model.entity;
 
-public class TeamInvite {
+public class Invitation {
 }
