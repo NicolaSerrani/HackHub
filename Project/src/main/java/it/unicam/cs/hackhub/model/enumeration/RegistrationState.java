@@ -2,9 +2,8 @@ package it.unicam.cs.hackhub.model.enumeration;
 
 public enum RegistrationState {
 
-    PENDING("Pending"),
-    CONFIRMED("Confirmed"),
-    CANCELLED("Cancelled");
+    ACTIVE("Active"),
+    RETIRED("Retired");
 
     private final String description;
 

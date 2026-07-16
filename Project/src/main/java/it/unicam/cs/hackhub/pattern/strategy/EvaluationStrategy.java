@@ -1,4 +1,9 @@
-package it.unicam.cs.hackhub.pattern.Strategy;
+package it.unicam.cs.hackhub.pattern.strategy;
 
-public class EvaluationStrategy {
+import it.unicam.cs.hackhub.model.entity.Submission;
+
+public interface EvaluationStrategy {
+
+    double evaluate(Submission submission);
+
 }
