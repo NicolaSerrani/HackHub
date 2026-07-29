@@ -1,42 +1,43 @@
 package it.unicam.cs.hackhub.model.entity;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-public class Mentor extends User {
+public class Mentor extends StaffMember {
+
+    private final List<String> reportedViolations;
 
     public Mentor() {
         super();
+        this.reportedViolations = new ArrayList<>();
     }
 
     public List<SupportRequest> viewSupportRequests(Hackathon hackathon) {
-
         if (hackathon == null) {
             throw new IllegalArgumentException("Hackathon cannot be null.");
         }
 
-        return new ArrayList<>(hackathon.getSupportRequests());
+        return hackathon.getSupportRequests();
     }
 
-    public void manageSupportRequest(SupportRequest request,
-                                     String response) {
-
-        if (request == null) {
-            throw new IllegalArgumentException("Support request cannot be null.");
+    public void reportViolation(Team team, String description) {
+        if (team == null) {
+            throw new IllegalArgumentException("Team cannot be null.");
         }
 
-        request.startHandling();
-        request.reply(response);
-        request.resolve();
-    }
-
-    public boolean canManage(SupportRequest request) {
-
-        if (request == null) {
-            return false;
+        if (description == null || description.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Violation description cannot be null or blank."
+            );
         }
 
-        return !request.isResolved();
+        reportedViolations.add(
+                "Team: " + team.getName() + " - " + description
+        );
     }
 
+    public List<String> getReportedViolations() {
+        return Collections.unmodifiableList(reportedViolations);
+    }
 }

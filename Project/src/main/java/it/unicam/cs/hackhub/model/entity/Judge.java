@@ -1,23 +1,27 @@
 package it.unicam.cs.hackhub.model.entity;
 
-import it.unicam.cs.hackhub.pattern.strategy.EvaluationStrategy;
-
-public class Judge extends User {
+public class Judge extends StaffMember {
 
     public Judge() {
         super();
     }
 
-    public Evaluation evaluateSubmission(Submission submission,
-                                         double score,
-                                         String comment) {
-
+    public Evaluation evaluateSubmission(
+            Submission submission,
+            double score,
+            String comment
+    ) {
         if (submission == null) {
             throw new IllegalArgumentException("Submission cannot be null.");
         }
 
-        Evaluation evaluation = new Evaluation();
+        if (score < 0 || score > 100) {
+            throw new IllegalArgumentException(
+                    "Score must be between 0 and 100."
+            );
+        }
 
+        Evaluation evaluation = new Evaluation();
         evaluation.setJudge(this);
         evaluation.setSubmission(submission);
         evaluation.setScore(score);
@@ -27,30 +31,4 @@ public class Judge extends User {
 
         return evaluation;
     }
-
-    public Evaluation evaluateSubmission(Submission submission,
-                                         String comment,
-                                         EvaluationStrategy strategy) {
-
-        if (submission == null) {
-            throw new IllegalArgumentException("Submission cannot be null.");
-        }
-
-        if (strategy == null) {
-            throw new IllegalArgumentException("Evaluation strategy cannot be null.");
-        }
-
-        Evaluation evaluation = new Evaluation();
-
-        evaluation.setJudge(this);
-        evaluation.setSubmission(submission);
-        evaluation.setComment(comment);
-        evaluation.assignStrategy(strategy);
-        evaluation.calculateScore();
-
-        submission.addEvaluation(evaluation);
-
-        return evaluation;
-    }
-
 }

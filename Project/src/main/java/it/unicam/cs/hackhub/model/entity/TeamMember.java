@@ -1,27 +1,51 @@
 package it.unicam.cs.hackhub.model.entity;
 
-public class TeamMember extends User {
+import it.unicam.cs.hackhub.model.enumeration.InvitationType;
+
+import java.util.List;
+
+public class TeamMember {
 
     private Team team;
 
     public TeamMember() {
-        super();
     }
 
     public Team createTeam(String teamName) {
+        if (teamName == null || teamName.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Team name cannot be null or blank."
+            );
+        }
 
-        Team team = new Team();
-        team.setName(teamName);
-        team.addMember(this);
+        Team newTeam = new Team();
+        newTeam.setName(teamName);
+        newTeam.addMember(this);
 
-        this.team = team;
+        this.team = newTeam;
 
-        return team;
+        return newTeam;
     }
 
-    public void inviteUser(User user) {
-        if (user == null) {
-            throw new IllegalArgumentException("User cannot be null.");
+    public void inviteUsers(List<User> users) {
+        if (users == null || users.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "The users list cannot be null or empty."
+            );
+        }
+
+        getTeam();
+
+        for (User user : users) {
+            if (user == null) {
+                continue;
+            }
+
+            Invitation invitation = new Invitation();
+            invitation.setType(InvitationType.TEAM);
+            invitation.setReceiver(user);
+
+            user.addInvitation(invitation);
         }
     }
 
@@ -30,8 +54,7 @@ public class TeamMember extends User {
             throw new IllegalArgumentException("Hackathon cannot be null.");
         }
 
-        Registration registration = new Registration();
-        hackathon.registerTeam(registration);
+        hackathon.registerTeam(getTeam());
     }
 
     public void submitSubmission(Submission submission) {
@@ -39,19 +62,25 @@ public class TeamMember extends User {
             throw new IllegalArgumentException("Submission cannot be null.");
         }
 
+        submission.setTeam(getTeam());
         submission.submit();
     }
 
-    public boolean belongsToTeam() {
-        return team != null;
-    }
-
     public Team getTeam() {
+        if (team == null) {
+            throw new IllegalStateException(
+                    "The team member does not belong to a team."
+            );
+        }
+
         return team;
     }
 
     public void setTeam(Team team) {
+        if (team == null) {
+            throw new IllegalArgumentException("Team cannot be null.");
+        }
+
         this.team = team;
     }
-
 }

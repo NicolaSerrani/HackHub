@@ -11,162 +11,220 @@ public class Hackathon {
 
     private Long hackathonId;
     private String name;
-    private String regulation;
-    private String location;
-
-    private LocalDate registrationDeadline;
     private LocalDate startDate;
     private LocalDate endDate;
-
-    private double prize;
+    private String regulation;
+    private LocalDate registrationDeadline;
+    private Double prize;
     private int maxTeamMembers;
-
     private HackathonState state;
+    private Team winner;
     private boolean leaderboardPublished;
 
     private Judge judge;
-    private Team winner;
-
     private final List<Mentor> mentors;
     private final List<Registration> registrations;
-    private final List<Submission> submissions;
     private final List<SupportRequest> supportRequests;
+    private final List<Submission> submissions;
 
     public Hackathon() {
-        this.mentors = new ArrayList<>();
-        this.registrations = new ArrayList<>();
-        this.submissions = new ArrayList<>();
-        this.supportRequests = new ArrayList<>();
         this.state = HackathonState.REGISTRATION_OPEN;
         this.leaderboardPublished = false;
+        this.mentors = new ArrayList<>();
+        this.registrations = new ArrayList<>();
+        this.supportRequests = new ArrayList<>();
+        this.submissions = new ArrayList<>();
     }
 
-    public void registerTeam(Registration registration) {
+    public void registerTeam(Team team) {
+        if (team == null) {
+            throw new IllegalArgumentException("Team cannot be null.");
+        }
+
+        if (state != HackathonState.REGISTRATION_OPEN) {
+            throw new IllegalStateException("Registrations are not open.");
+        }
+
+        if (team.getMemberCount() > maxTeamMembers) {
+            throw new IllegalArgumentException("The team exceeds the maximum number of members.");
+        }
+
+        boolean alreadyRegistered = registrations.stream()
+                .anyMatch(registration -> registration.getTeam() == team
+                        && registration.isActive());
+
+        if (alreadyRegistered) {
+            throw new IllegalStateException("The team is already registered.");
+        }
+
+        Registration registration = new Registration();
+        registration.setTeam(team);
+        registration.setHackathon(this);
+
         registrations.add(registration);
     }
 
-    public void addSubmission(Submission submission) {
-        submissions.add(submission);
+    public void setWinner(Team team) {
+        if (team == null) {
+            throw new IllegalArgumentException("Winner team cannot be null.");
+        }
+
+        this.winner = team;
     }
 
-    public void setJudge(Judge judge) {
-        this.judge = judge;
+    public void setState(HackathonState state) {
+        if (state == null) {
+            throw new IllegalArgumentException("State cannot be null.");
+        }
+
+        this.state = state;
     }
 
     public void addMentor(Mentor mentor) {
-        mentors.add(mentor);
+        if (mentor == null) {
+            throw new IllegalArgumentException("Mentor cannot be null.");
+        }
+
+        if (!mentors.contains(mentor)) {
+            mentors.add(mentor);
+        }
     }
 
-    public void removeMentor(Mentor mentor) {
-        mentors.remove(mentor);
-    }
+    public void setJudge(Judge judge) {
+        if (judge == null) {
+            throw new IllegalArgumentException("Judge cannot be null.");
+        }
 
-    public void setWinner(Team winner) {
-        this.winner = winner;
+        this.judge = judge;
     }
 
     public void addSupportRequest(SupportRequest request) {
-        supportRequests.add(request);
+        if (request == null) {
+            throw new IllegalArgumentException("Support request cannot be null.");
+        }
+
+        if (!supportRequests.contains(request)) {
+            supportRequests.add(request);
+            request.setHackathon(this);
+        }
     }
 
-    public void removeSupportRequest(SupportRequest request) {
-        supportRequests.remove(request);
+    public void addSubmission(Submission submission) {
+        if (submission == null) {
+            throw new IllegalArgumentException("Submission cannot be null.");
+        }
+
+        if (!submissions.contains(submission)) {
+            submissions.add(submission);
+        }
     }
 
     public void publishLeaderboard() {
+        if (state != HackathonState.UNDER_EVALUATION) {
+            throw new IllegalStateException(
+                    "The leaderboard can be published only during evaluation."
+            );
+        }
 
-        if (leaderboardPublished) {
-            throw new IllegalStateException("Leaderboard has already been published.");
+        if (winner == null) {
+            throw new IllegalStateException(
+                    "A winner must be declared before publishing the leaderboard."
+            );
         }
 
         leaderboardPublished = true;
         state = HackathonState.COMPLETED;
     }
-
-    public boolean hasWinner() {
-        return winner != null;
-    }
-
-    public boolean hasJudge() {
-        return judge != null;
-    }
-
-    public boolean isRegistrationOpen() {
-        return state == HackathonState.REGISTRATION_OPEN;
-    }
-
-    public boolean isInProgress() {
-        return state == HackathonState.IN_PROGRESS;
-    }
-
-    public boolean isUnderEvaluation() {
-        return state == HackathonState.UNDER_EVALUATION;
-    }
-
-    public boolean isCompleted() {
-        return state == HackathonState.COMPLETED;
-    }
-
-    public boolean isLeaderboardPublished() {
-        return leaderboardPublished;
-    }
-
     public List<Team> getLeaderboard() {
-
-        List<Team> leaderboard = new ArrayList<>();
-
-        if (winner != null) {
-            leaderboard.add(winner);
+        if (winner == null) {
+            return Collections.emptyList();
         }
 
-        return leaderboard;
-    }
-
-    public Long getHackathonId() {
-        return hackathonId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getRegulation() {
-        return regulation;
-    }
-
-    public String getLocation() {
-        return location;
-    }
-
-    public LocalDate getRegistrationDeadline() {
-        return registrationDeadline;
-    }
-
-    public LocalDate getStartDate() {
-        return startDate;
-    }
-
-    public LocalDate getEndDate() {
-        return endDate;
-    }
-
-    public double getPrize() {
-        return prize;
-    }
-    public int getMaxTeamMembers() {
-        return maxTeamMembers;
+        return Collections.singletonList(winner);
     }
 
     public HackathonState getState() {
         return state;
     }
 
-    public Judge getJudge() {
-        return judge;
+    public Hackathon getDetails() {
+        return this;
+    }
+
+    public Long getHackathonId() {
+        return hackathonId;
+    }
+
+    public void setHackathonId(Long hackathonId) {
+        this.hackathonId = hackathonId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
+    }
+
+    public String getRegulation() {
+        return regulation;
+    }
+
+    public void setRegulation(String regulation) {
+        this.regulation = regulation;
+    }
+
+    public LocalDate getRegistrationDeadline() {
+        return registrationDeadline;
+    }
+
+    public void setRegistrationDeadline(LocalDate registrationDeadline) {
+        this.registrationDeadline = registrationDeadline;
+    }
+
+    public Double getPrize() {
+        return prize;
+    }
+
+    public void setPrize(Double prize) {
+        this.prize = prize;
+    }
+
+    public int getMaxTeamMembers() {
+        return maxTeamMembers;
+    }
+
+    public void setMaxTeamMembers(int maxTeamMembers) {
+        this.maxTeamMembers = maxTeamMembers;
     }
 
     public Team getWinner() {
         return winner;
+    }
+
+    public boolean isLeaderboardPublished() {
+        return leaderboardPublished;
+    }
+
+    public Judge getJudge() {
+        return judge;
     }
 
     public List<Mentor> getMentors() {
@@ -177,52 +235,11 @@ public class Hackathon {
         return Collections.unmodifiableList(registrations);
     }
 
-    public List<Submission> getSubmissions() {
-        return Collections.unmodifiableList(submissions);
-    }
-
     public List<SupportRequest> getSupportRequests() {
         return Collections.unmodifiableList(supportRequests);
     }
 
-    /*==================================================
-                    SETTERS (used by Builder)
-    ==================================================*/
-
-    public void setHackathonId(Long hackathonId) {
-        this.hackathonId = hackathonId;
+    public List<Submission> getSubmissions() {
+        return Collections.unmodifiableList(submissions);
     }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setRegulation(String regulation) {
-        this.regulation = regulation;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
-    public void setRegistrationDeadline(LocalDate registrationDeadline) {
-        this.registrationDeadline = registrationDeadline;
-    }
-
-    public void setStartDate(LocalDate startDate) {
-        this.startDate = startDate;
-    }
-
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
-    }
-
-    public void setPrize(double prize) {
-        this.prize = prize;
-    }
-
-    public void setMaxTeamMembers(int maxTeamMembers) {
-        this.maxTeamMembers = maxTeamMembers;
-    }
-
 }
