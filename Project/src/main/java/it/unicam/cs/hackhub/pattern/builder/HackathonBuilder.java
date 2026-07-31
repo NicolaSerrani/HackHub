@@ -24,11 +24,6 @@ public class HackathonBuilder {
         return this;
     }
 
-    public HackathonBuilder setLocation(String location) {
-        hackathon.setLocation(location);
-        return this;
-    }
-
     public HackathonBuilder setRegistrationDeadline(LocalDate registrationDeadline) {
         hackathon.setRegistrationDeadline(registrationDeadline);
         return this;
