@@ -1,9 +1,10 @@
 package it.unicam.cs.hackhub.repository;
 
 import it.unicam.cs.hackhub.model.entity.Payment;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface PaymentRepository {
-    void save(Payment payment);
-    Payment findById(Long id);
-    Payment findByHackathon(Long hackathonId);
+import java.util.Optional;
+
+public interface PaymentRepository extends JpaRepository<Payment, Long> {
+    Optional<Payment> findByHackathon_HackathonId(Long hackathonId);
 }

@@ -1,14 +1,21 @@
 package it.unicam.cs.hackhub.model.entity;
 
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Transient;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Entity
+@DiscriminatorValue("STAFF_MEMBER")
 public class StaffMember extends User {
 
-    private final List<Hackathon> hackathons;
+    @Transient
+    private List<Hackathon> hackathons;
 
     public StaffMember() {
         super();

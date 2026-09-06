@@ -1,5 +1,10 @@
 package it.unicam.cs.hackhub.model.entity;
 
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+
+@Entity
+@DiscriminatorValue("JUDGE")
 public class Judge extends StaffMember {
 
     public Judge() {

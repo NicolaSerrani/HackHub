@@ -1,87 +1,65 @@
 package it.unicam.cs.hackhub.service;
 
 import it.unicam.cs.hackhub.model.entity.Invitation;
+import it.unicam.cs.hackhub.model.entity.TeamMember;
 import it.unicam.cs.hackhub.model.enumeration.InvitationType;
+import it.unicam.cs.hackhub.repository.InvitationRepository;
+import it.unicam.cs.hackhub.repository.UserRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.hibernate.Hibernate;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.HashSet;
 
+@Service
+@Transactional
 public class InvitationService {
+    private final InvitationRepository invitationRepository;
+    private final UserRepository userRepository;
 
-    private static final Map<Long, Invitation> invitations = new LinkedHashMap<>();
-    private static final Set<Long> assignedMentors = new HashSet<>();
-    private static final Set<Long> assignedJudges = new HashSet<>();
-    private static long nextInvitationId = 1;
-    private Invitation selectedInvitation;
+    public InvitationService(InvitationRepository invitationRepository, UserRepository userRepository) {
+        this.invitationRepository = invitationRepository;
+        this.userRepository = userRepository;
+    }
 
+    @Transactional(readOnly = true)
     public List<Invitation> viewReceivedInvitations(Long userId) {
-        if (userId == null) {
-            throw new IllegalArgumentException("User ID cannot be null");
+        return invitationRepository.findByReceiver_UserId(userId);
+    }
+
+    public Invitation acceptTeamInvitation(Long invitationId) {
+        Invitation invitation = findInvitation(invitationId, InvitationType.TEAM);
+        Object receiver = Hibernate.unproxy(invitation.getReceiver());
+        if (!(receiver instanceof TeamMember member)) {
+            throw new IllegalStateException("A team invitation can only be accepted by a TEAM_MEMBER");
         }
-        return invitations.values().stream()
-                .filter(invitation -> invitation.getReceiver() != null
-                        && userId.equals(invitation.getReceiver().getUserId()))
-                .toList();
-    }
-
-    public void acceptTeamInvitation(Long invitationId) {
-        selectedInvitation = findInvitation(invitationId, InvitationType.TEAM);
-        if (!checkInvitationValidity() || checkUserAlreadyInTeam()) {
-            throw new IllegalStateException("Team invitation cannot be accepted");
+        if (invitation.getTeam() == null) {
+            throw new IllegalStateException("Invitation is not associated with a team");
         }
-        selectedInvitation.getReceiver().acceptInvitation(selectedInvitation);
+        member.acceptInvitation(invitation);
+        invitation.getTeam().addMember(member);
+        userRepository.save(member);
+        return invitationRepository.save(invitation);
     }
 
-    public void acceptMentorInvitation(Long invitationId) {
-        selectedInvitation = findInvitation(invitationId, InvitationType.MENTOR);
-        if (!checkInvitationValidity() || checkMentorAlreadyAssigned()) {
-            throw new IllegalStateException("Mentor invitation cannot be accepted");
-        }
-        selectedInvitation.getReceiver().acceptInvitation(selectedInvitation);
-        assignedMentors.add(selectedInvitation.getReceiver().getUserId());
+    public Invitation acceptMentorInvitation(Long invitationId) {
+        return accept(findInvitation(invitationId, InvitationType.MENTOR));
     }
 
-    public void acceptJudgeInvitation(Long invitationId) {
-        selectedInvitation = findInvitation(invitationId, InvitationType.JUDGE);
-        if (!checkInvitationValidity() || checkJudgeAlreadyAssigned()) {
-            throw new IllegalStateException("Judge invitation cannot be accepted");
-        }
-        selectedInvitation.getReceiver().acceptInvitation(selectedInvitation);
-        assignedJudges.add(selectedInvitation.getReceiver().getUserId());
+    public Invitation acceptJudgeInvitation(Long invitationId) {
+        return accept(findInvitation(invitationId, InvitationType.JUDGE));
     }
 
-    static long nextInvitationId() {
-        return nextInvitationId++;
-    }
-
-    static void storeInvitation(Invitation invitation) {
-        invitations.put(invitation.getInvitationId(), invitation);
-    }
-
-    private boolean checkInvitationValidity() {
-        return selectedInvitation != null && selectedInvitation.isPending()
-                && selectedInvitation.getReceiver() != null;
-    }
-
-    private boolean checkUserAlreadyInTeam() {
-        return false;
-    }
-
-    private boolean checkMentorAlreadyAssigned() {
-        return assignedMentors.contains(selectedInvitation.getReceiver().getUserId());
-    }
-
-    private boolean checkJudgeAlreadyAssigned() {
-        return assignedJudges.contains(selectedInvitation.getReceiver().getUserId());
+    private Invitation accept(Invitation invitation) {
+        invitation.getReceiver().acceptInvitation(invitation);
+        return invitationRepository.save(invitation);
     }
 
     private Invitation findInvitation(Long invitationId, InvitationType type) {
-        Invitation invitation = invitations.get(invitationId);
-        if (invitation == null || invitation.getType() != type) {
-            throw new IllegalArgumentException("Invitation not found or of the wrong type");
+        Invitation invitation = invitationRepository.findByInvitationIdAndType(invitationId, type)
+                .orElseThrow(() -> new IllegalArgumentException("Invitation not found or of the wrong type"));
+        if (!invitation.isPending()) {
+            throw new IllegalStateException("Invitation has already been processed");
         }
         return invitation;
     }

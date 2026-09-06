@@ -1,48 +1,42 @@
 package it.unicam.cs.hackhub.service;
 
 import it.unicam.cs.hackhub.model.entity.Evaluation;
+import it.unicam.cs.hackhub.model.entity.Judge;
 import it.unicam.cs.hackhub.model.entity.Submission;
+import it.unicam.cs.hackhub.repository.EvaluationRepository;
+import it.unicam.cs.hackhub.repository.SubmissionRepository;
+import it.unicam.cs.hackhub.repository.UserRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
+@Service
+@Transactional
 public class EvaluationService {
+    private final EvaluationRepository evaluationRepository;
+    private final SubmissionRepository submissionRepository;
+    private final UserRepository userRepository;
 
-    private final Map<Long, Evaluation> evaluations = new LinkedHashMap<>();
-    private long nextEvaluationId = 1;
-    private Submission selectedSubmission;
-    private double score;
-    private String comment;
+    public EvaluationService(EvaluationRepository evaluationRepository,
+                             SubmissionRepository submissionRepository,
+                             UserRepository userRepository) {
+        this.evaluationRepository = evaluationRepository;
+        this.submissionRepository = submissionRepository;
+        this.userRepository = userRepository;
+    }
 
-    public void evaluateSubmission(Long submissionId, double score, String comment) {
-        selectedSubmission = SubmissionService.findSubmission(submissionId);
-        this.score = score;
-        this.comment = comment;
-        if (!validateScore() || !validateComment() || checkAlreadyEvaluated() || !checkJudgeAuthorization()) {
-            throw new IllegalArgumentException("Invalid evaluation");
+    public Evaluation evaluateSubmission(Long submissionId, Long judgeId, double score, String comment) {
+        Submission submission = submissionRepository.findById(submissionId)
+                .orElseThrow(() -> new IllegalArgumentException("Submission not found: " + submissionId));
+        Judge judge = userRepository.findById(judgeId).filter(Judge.class::isInstance).map(Judge.class::cast)
+                .orElseThrow(() -> new IllegalArgumentException("Judge not found: " + judgeId));
+        if (comment == null || comment.isBlank()) {
+            throw new IllegalArgumentException("Evaluation comment cannot be blank");
         }
-        Evaluation evaluation = new Evaluation();
-        evaluation.setEvaluationId(nextEvaluationId++);
-        evaluation.setSubmission(selectedSubmission);
-        evaluation.setScore(score);
-        evaluation.setComment(comment);
-        selectedSubmission.addEvaluation(evaluation);
-        evaluations.put(evaluation.getEvaluationId(), evaluation);
-    }
-
-    private boolean validateScore() {
-        return score >= 0 && score <= 10;
-    }
-
-    private boolean validateComment() {
-        return comment != null && !comment.isBlank();
-    }
-
-    private boolean checkAlreadyEvaluated() {
-        return selectedSubmission.getEvaluation() != null;
-    }
-
-    private boolean checkJudgeAuthorization() {
-        return selectedSubmission.getState() != null;
+        if (evaluationRepository.findBySubmission_SubmissionId(submissionId).isPresent()) {
+            throw new IllegalStateException("Submission has already been evaluated");
+        }
+        Evaluation evaluation = judge.evaluateSubmission(submission, score, comment);
+        submissionRepository.save(submission);
+        return evaluationRepository.save(evaluation);
     }
 }

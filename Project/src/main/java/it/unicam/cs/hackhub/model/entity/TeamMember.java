@@ -1,11 +1,23 @@
 package it.unicam.cs.hackhub.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+
 import it.unicam.cs.hackhub.model.enumeration.InvitationType;
 
 import java.util.List;
 
+@Entity
+@DiscriminatorValue("TEAM_MEMBER")
 public class TeamMember extends User {
 
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "team_id")
     private Team team;
 
     public TeamMember() {

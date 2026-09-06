@@ -1,79 +1,67 @@
 package it.unicam.cs.hackhub.service;
 
+import it.unicam.cs.hackhub.model.entity.Judge;
+import it.unicam.cs.hackhub.model.entity.Mentor;
+import it.unicam.cs.hackhub.model.entity.Organizer;
+import it.unicam.cs.hackhub.model.entity.TeamMember;
 import it.unicam.cs.hackhub.model.entity.User;
+import it.unicam.cs.hackhub.repository.UserRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.Locale;
 
+@Service
+@Transactional
 public class UserService {
+    private final UserRepository userRepository;
 
-    private final Map<Long, User> users = new LinkedHashMap<>();
-    private long nextUserId = 1;
-    private String name;
-    private String email;
-    private String password;
-    private User authenticatedUser;
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
-    public void register(String name, String email, String password) {
-        this.name = name;
-        this.email = email;
-        this.password = password;
-        if (!validateRegistrationData()) {
-            throw new IllegalArgumentException("Invalid registration data");
+    public User register(String name, String email, String password) {
+        return register(name, email, password, "USER");
+    }
+
+    public User register(String name, String email, String password, String role) {
+        if (name == null || name.isBlank() || email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Name and email are required");
         }
-        User user = new User();
-        user.setUserId(nextUserId++);
-        user.setName(name);
-        user.setEmail(email);
+        if (password == null || password.length() < 8) {
+            throw new IllegalArgumentException("Password must contain at least 8 characters");
+        }
+        if (userRepository.existsByEmailIgnoreCase(email)) {
+            throw new IllegalStateException("Email is already registered");
+        }
+        String normalizedRole = role == null ? "USER" : role.trim().toUpperCase(Locale.ROOT);
+        User user = switch (normalizedRole) {
+            case "USER" -> new User();
+            case "TEAM_MEMBER" -> new TeamMember();
+            case "MENTOR" -> new Mentor();
+            case "JUDGE" -> new Judge();
+            case "ORGANIZER" -> new Organizer();
+            default -> throw new IllegalArgumentException("Unsupported role: " + role);
+        };
+        user.setName(name.trim());
+        user.setEmail(email.trim().toLowerCase(Locale.ROOT));
         user.setPassword(password);
-        users.put(user.getUserId(), user);
+        return userRepository.save(user);
     }
 
+    @Transactional(readOnly = true)
     public User login(String email, String password) {
-        this.email = email;
-        this.password = password;
-        if (!validateCredentials()) {
-            throw new IllegalArgumentException("Invalid credentials");
+        User user = userRepository.findByEmailIgnoreCase(email == null ? "" : email)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
+        if (!user.authenticate(email, password)) {
+            throw new IllegalArgumentException("Invalid email or password");
         }
-        authenticatedUser = users.values().stream()
-                .filter(user -> user.authenticate(email, password))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
-        return authenticatedUser;
+        return user;
     }
 
-    public void clearAuthenticationData() {
-        if (authenticatedUser != null) {
-            authenticatedUser.logout();
-        }
-        authenticatedUser = null;
-        password = null;
-    }
-
-    private boolean validateRegistrationData() {
-        return checkRequiredFields() && validateEmail() && validatePassword()
-                && users.values().stream().noneMatch(user -> user.getEmail().equalsIgnoreCase(email));
-    }
-
-    private boolean validateEmail() {
-        return email != null && email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
-    }
-
-    private boolean validatePassword() {
-        return password != null && password.length() >= 8;
-    }
-
-    private boolean validateCredentials() {
-        return checkRequiredFields() && checkAuthentication();
-    }
-
-    private boolean checkRequiredFields() {
-        return email != null && !email.isBlank() && password != null && !password.isBlank()
-                && (name == null || !name.isBlank());
-    }
-
-    private boolean checkAuthentication() {
-        return users.values().stream()
-                .anyMatch(user -> user.getEmail().equals(email) && user.getPassword().equals(password));
+    @Transactional(readOnly = true)
+    public User findUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
     }
 }

@@ -1,16 +1,39 @@
 package it.unicam.cs.hackhub.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import it.unicam.cs.hackhub.model.enumeration.PaymentState;
 
 import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "payments")
 public class Payment {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long paymentId;
     private double amount;
     private LocalDateTime paymentDate;
+    @Enumerated(EnumType.STRING)
     private PaymentState state;
+    @JsonIgnore
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "hackathon_id", nullable = false, unique = true)
     private Hackathon hackathon;
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "recipient_team_id", nullable = false)
     private Team recipient;
 
     public Payment() {

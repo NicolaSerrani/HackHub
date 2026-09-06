@@ -1,19 +1,45 @@
 package it.unicam.cs.hackhub.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import it.unicam.cs.hackhub.model.enumeration.SubmissionState;
 
 import java.time.LocalDate;
 
+@Entity
+@Table(name = "submissions")
 public class Submission {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long submissionId;
     private String title;
     private String description;
     private String repositoryUrl;
+    @Enumerated(EnumType.STRING)
     private SubmissionState state;
     private LocalDate submissionDate;
 
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "team_id", nullable = false)
     private Team team;
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "hackathon_id", nullable = false)
+    private Hackathon hackathon;
+    @OneToOne(mappedBy = "submission", cascade = CascadeType.ALL)
     private Evaluation evaluation;
 
     public Submission() {
@@ -137,5 +163,16 @@ public class Submission {
 
     public Evaluation getEvaluation() {
         return evaluation;
+    }
+
+    public Hackathon getHackathon() {
+        return hackathon;
+    }
+
+    public void setHackathon(Hackathon hackathon) {
+        if (hackathon == null) {
+            throw new IllegalArgumentException("Hackathon cannot be null.");
+        }
+        this.hackathon = hackathon;
     }
 }

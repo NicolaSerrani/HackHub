@@ -5,7 +5,9 @@ import it.unicam.cs.hackhub.model.entity.Call;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.stereotype.Component;
 
+@Component
 public class LocalCalendar implements Calendar {
 
     private final List<LocalDateTime> availableTimeSlots = new ArrayList<>();

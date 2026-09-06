@@ -1,89 +1,77 @@
 package it.unicam.cs.hackhub.service;
 
 import it.unicam.cs.hackhub.integration.calendar.Calendar;
-import it.unicam.cs.hackhub.integration.calendar.LocalCalendar;
 import it.unicam.cs.hackhub.model.entity.Call;
 import it.unicam.cs.hackhub.model.entity.Mentor;
 import it.unicam.cs.hackhub.model.entity.Team;
 import it.unicam.cs.hackhub.repository.CallRepository;
-import it.unicam.cs.hackhub.repository.memory.InMemoryCallRepository;
+import it.unicam.cs.hackhub.repository.TeamRepository;
+import it.unicam.cs.hackhub.repository.UserRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
+@Service
+@Transactional
 public class CallService {
-
-    private final List<Call> calls = new ArrayList<>();
     private final Calendar calendar;
     private final CallRepository callRepository;
-    private long nextCallId = 1;
+    private final UserRepository userRepository;
+    private final TeamRepository teamRepository;
 
-    public CallService() {
-        this(new LocalCalendar(), new InMemoryCallRepository());
-    }
-
-    public CallService(Calendar calendar) {
-        this(calendar, new InMemoryCallRepository());
-    }
-
-    public CallService(Calendar calendar, CallRepository callRepository) {
-        if (calendar == null) {
-            throw new IllegalArgumentException("Calendar cannot be null.");
-        }
-        if (callRepository == null) {
-            throw new IllegalArgumentException("Call repository cannot be null.");
-        }
+    public CallService(Calendar calendar, CallRepository callRepository,
+                       UserRepository userRepository, TeamRepository teamRepository) {
         this.calendar = calendar;
         this.callRepository = callRepository;
+        this.userRepository = userRepository;
+        this.teamRepository = teamRepository;
+    }
+
+    public Call proposeCall(Long mentorId, Long teamId, LocalDateTime dateTime, Duration duration) {
+        Mentor mentor = userRepository.findById(mentorId).filter(Mentor.class::isInstance)
+                .map(Mentor.class::cast)
+                .orElseThrow(() -> new IllegalArgumentException("Mentor not found: " + mentorId));
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new IllegalArgumentException("Team not found: " + teamId));
+        return proposeCall(mentor, team, dateTime, duration);
     }
 
     public Call proposeCall(Mentor mentor, Team team, LocalDateTime dateTime, Duration duration) {
-        if (mentor == null) {
-            throw new IllegalArgumentException("Mentor cannot be null.");
-        }
         Call call = mentor.proposeCall(team, dateTime, duration);
-        call.setCallId(nextCallId++);
-        callRepository.save(call);
+        callRepository.saveAndFlush(call);
         call.schedule(calendar.registerCall(call));
-        callRepository.save(call);
-        calls.add(call);
-        return call;
+        return callRepository.save(call);
     }
 
-    public void confirmCall(Long callId) {
+    public Call confirmCall(Long callId) {
         Call call = findCall(callId);
         call.confirm();
-        callRepository.save(call);
+        return callRepository.save(call);
     }
 
-    public void cancelCall(Long callId) {
+    public Call cancelCall(Long callId) {
         Call call = findCall(callId);
         call.cancel();
-        callRepository.save(call);
+        return callRepository.save(call);
     }
 
+    @Transactional(readOnly = true)
     public List<Call> viewTeamCalls(Long teamId) {
-        if (teamId == null) {
-            throw new IllegalArgumentException("Team ID cannot be null.");
-        }
-        return callRepository.findByTeam(teamId);
+        return callRepository.findByTeam_TeamId(teamId);
     }
 
+    @Transactional(readOnly = true)
     public List<Call> viewCalls() {
-        return new ArrayList<>(calls);
+        return callRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public Call findCall(Long callId) {
-        if (callId == null) {
-            throw new IllegalArgumentException("Call ID cannot be null.");
-        }
-        Call call = callRepository.findById(callId);
-        if (call == null) {
-            throw new IllegalArgumentException("Call not found: " + callId);
-        }
-        return call;
+        return callRepository.findById(callId)
+                .orElseThrow(() -> new IllegalArgumentException("Call not found: " + callId));
     }
 
     public List<LocalDateTime> viewAvailableTimeSlots() {

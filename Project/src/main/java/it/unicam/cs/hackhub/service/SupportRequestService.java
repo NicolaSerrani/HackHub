@@ -1,80 +1,87 @@
 package it.unicam.cs.hackhub.service;
 
+import it.unicam.cs.hackhub.model.entity.Hackathon;
+import it.unicam.cs.hackhub.model.entity.Mentor;
 import it.unicam.cs.hackhub.model.entity.SupportRequest;
+import it.unicam.cs.hackhub.model.entity.Team;
 import it.unicam.cs.hackhub.model.enumeration.HackathonState;
 import it.unicam.cs.hackhub.model.enumeration.SupportRequestState;
+import it.unicam.cs.hackhub.repository.HackathonRepository;
+import it.unicam.cs.hackhub.repository.SupportRequestRepository;
+import it.unicam.cs.hackhub.repository.TeamRepository;
+import it.unicam.cs.hackhub.repository.UserRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
+@Service
+@Transactional
 public class SupportRequestService {
+    private final SupportRequestRepository supportRequestRepository;
+    private final TeamRepository teamRepository;
+    private final UserRepository userRepository;
+    private final HackathonRepository hackathonRepository;
 
-    private final Map<Long, SupportRequest> requests = new LinkedHashMap<>();
-    private long nextRequestId = 1;
-    private SupportRequest selectedRequest;
-    private String response;
+    public SupportRequestService(SupportRequestRepository supportRequestRepository, TeamRepository teamRepository,
+                                 UserRepository userRepository, HackathonRepository hackathonRepository) {
+        this.supportRequestRepository = supportRequestRepository;
+        this.teamRepository = teamRepository;
+        this.userRepository = userRepository;
+        this.hackathonRepository = hackathonRepository;
+    }
 
-    public void createSupportRequest(SupportRequest request) {
-        selectedRequest = request;
-        if (!checkSupportRequest() || !validateSubject() || !validateDescription()
-                || !checkMentorRegistration() || !checkHackathonState() || !checkSupportRequestAvailability()) {
+    public SupportRequest createSupportRequest(Long teamId, Long mentorId, Long hackathonId,
+                                               String title, String description) {
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new IllegalArgumentException("Team not found: " + teamId));
+        Mentor mentor = userRepository.findById(mentorId).filter(Mentor.class::isInstance).map(Mentor.class::cast)
+                .orElseThrow(() -> new IllegalArgumentException("Mentor not found: " + mentorId));
+        Hackathon hackathon = hackathonRepository.findById(hackathonId)
+                .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        SupportRequest request = new SupportRequest();
+        request.setTeam(team);
+        request.setMentor(mentor);
+        request.setHackathon(hackathon);
+        request.setTitle(title);
+        request.setDescription(description);
+        return createSupportRequest(request);
+    }
+
+    public SupportRequest createSupportRequest(SupportRequest request) {
+        if (request == null || !request.validate() || request.getMentor() == null
+                || request.getTeam() == null || request.getHackathon() == null) {
             throw new IllegalArgumentException("Invalid support request");
         }
-        selectedRequest.setSupportRequestId(nextRequestId++);
-        requests.put(selectedRequest.getSupportRequestId(), selectedRequest);
+        if (request.getHackathon().getState() == HackathonState.COMPLETED) {
+            throw new IllegalStateException("Cannot request support for a completed hackathon");
+        }
+        return supportRequestRepository.save(request);
     }
 
+    @Transactional(readOnly = true)
     public List<SupportRequest> viewSupportRequests(Long mentorId) {
-        if (mentorId == null) {
-            throw new IllegalArgumentException("Mentor ID cannot be null");
-        }
-        return requests.values().stream()
-                .filter(request -> request.getMentor() != null)
-                .toList();
+        return supportRequestRepository.findByMentor_UserId(mentorId);
     }
 
-    public void manageSupportRequest(Long requestId, String response, SupportRequestState state) {
-        selectedRequest = requests.get(requestId);
-        this.response = response;
-        if (!checkSupportRequestAvailability() || !validateResponse() || state == null) {
-            throw new IllegalArgumentException("Invalid support request management data");
+    @Transactional(readOnly = true)
+    public List<SupportRequest> viewHackathonSupportRequests(Long hackathonId) {
+        return supportRequestRepository.findByHackathon_HackathonId(hackathonId);
+    }
+
+    public SupportRequest manageSupportRequest(Long requestId, String response, SupportRequestState state) {
+        SupportRequest request = supportRequestRepository.findById(requestId)
+                .orElseThrow(() -> new IllegalArgumentException("Support request not found: " + requestId));
+        if (response == null || response.isBlank() || state == null) {
+            throw new IllegalArgumentException("Response and state are required");
         }
-        if (state == SupportRequestState.IN_PROGRESS && selectedRequest.isOpen()) {
-            selectedRequest.startHandling();
+        if (state == SupportRequestState.IN_PROGRESS && request.isOpen()) {
+            request.startHandling();
         }
-        selectedRequest.reply(response);
+        request.reply(response);
         if (state == SupportRequestState.RESOLVED) {
-            selectedRequest.resolve();
+            request.resolve();
         }
-    }
-
-    private boolean validateSubject() {
-        return selectedRequest.getTitle() != null && !selectedRequest.getTitle().isBlank();
-    }
-
-    private boolean validateDescription() {
-        return selectedRequest.getDescription() != null && !selectedRequest.getDescription().isBlank();
-    }
-
-    private boolean validateResponse() {
-        return response != null && !response.isBlank();
-    }
-
-    private boolean checkMentorRegistration() {
-        return selectedRequest.getMentor() != null;
-    }
-
-    private boolean checkHackathonState() {
-        return selectedRequest.getHackathon() != null
-                && selectedRequest.getHackathon().getState() != HackathonState.COMPLETED;
-    }
-
-    private boolean checkSupportRequest() {
-        return selectedRequest != null;
-    }
-
-    private boolean checkSupportRequestAvailability() {
-        return checkSupportRequest() && !selectedRequest.isResolved();
+        return supportRequestRepository.save(request);
     }
 }

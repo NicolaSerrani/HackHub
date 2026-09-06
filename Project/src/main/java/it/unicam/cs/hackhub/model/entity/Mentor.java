@@ -1,16 +1,34 @@
 package it.unicam.cs.hackhub.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
+@Entity
+@DiscriminatorValue("MENTOR")
 public class Mentor extends StaffMember {
 
-    private final List<String> reportedViolations;
-    private final List<Call> proposedCalls;
-    private final List<Team> supportedTeams;
+    @ElementCollection
+    @CollectionTable(name = "mentor_violations", joinColumns = @JoinColumn(name = "mentor_id"))
+    @Column(name = "description")
+    private List<String> reportedViolations;
+    @JsonIgnore
+    @OneToMany(mappedBy = "mentor")
+    private List<Call> proposedCalls;
+    @JsonIgnore
+    @OneToMany(mappedBy = "supportMentor")
+    private List<Team> supportedTeams;
 
     public Mentor() {
         super();
