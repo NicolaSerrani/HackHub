@@ -100,7 +100,7 @@ public class TeamService {
         return checkRegisteredTeams();
     }
 
-    private Team findTeam(Long teamId) {
+    static Team findTeam(Long teamId) {
         Team team = teams.get(teamId);
         if (team == null) {
             throw new IllegalArgumentException("Team not found: " + teamId);

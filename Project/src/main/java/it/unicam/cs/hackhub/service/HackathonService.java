@@ -4,8 +4,13 @@ import it.unicam.cs.hackhub.model.entity.Hackathon;
 import it.unicam.cs.hackhub.model.entity.Judge;
 import it.unicam.cs.hackhub.model.entity.Mentor;
 import it.unicam.cs.hackhub.model.entity.Team;
+import it.unicam.cs.hackhub.model.entity.Payment;
 import it.unicam.cs.hackhub.model.enumeration.HackathonState;
+import it.unicam.cs.hackhub.integration.payment.LocalPaymentSystem;
+import it.unicam.cs.hackhub.integration.payment.PaymentSystem;
 import it.unicam.cs.hackhub.pattern.builder.HackathonBuilder;
+import it.unicam.cs.hackhub.repository.PaymentRepository;
+import it.unicam.cs.hackhub.repository.memory.InMemoryPaymentRepository;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -18,8 +23,30 @@ public class HackathonService {
     private static final Map<Long, Mentor> mentors = new LinkedHashMap<>();
     private static final Map<Long, Judge> judges = new LinkedHashMap<>();
     private static long nextHackathonId = 1;
+    private static long nextPaymentId = 1;
+    private final PaymentSystem paymentSystem;
+    private final PaymentRepository paymentRepository;
     private Hackathon selectedHackathon;
     private Team selectedTeam;
+
+    public HackathonService() {
+        this(new LocalPaymentSystem(), new InMemoryPaymentRepository());
+    }
+
+    public HackathonService(PaymentSystem paymentSystem) {
+        this(paymentSystem, new InMemoryPaymentRepository());
+    }
+
+    public HackathonService(PaymentSystem paymentSystem, PaymentRepository paymentRepository) {
+        if (paymentSystem == null) {
+            throw new IllegalArgumentException("Payment system cannot be null");
+        }
+        if (paymentRepository == null) {
+            throw new IllegalArgumentException("Payment repository cannot be null");
+        }
+        this.paymentSystem = paymentSystem;
+        this.paymentRepository = paymentRepository;
+    }
 
     public void createHackathon(HackathonBuilder builder) {
         if (builder == null) {
@@ -34,8 +61,16 @@ public class HackathonService {
     }
 
     public void registerTeam(Long hackathonId) {
+        Team currentTeam = TeamService.getCurrentTeam();
+        if (currentTeam == null) {
+            throw new IllegalStateException("No current team is available");
+        }
+        registerTeam(hackathonId, currentTeam.getTeamId());
+    }
+
+    public void registerTeam(Long hackathonId, Long teamId) {
         selectedHackathon = findHackathon(hackathonId);
-        selectedTeam = TeamService.getCurrentTeam();
+        selectedTeam = TeamService.findTeam(teamId);
         if (!checkAvailability(hackathonId) || !checkTeamRequirements()
                 || !checkTeamRegistration() || checkAlreadyRegisteredTeam()) {
             throw new IllegalStateException("Team cannot be registered");
@@ -49,6 +84,18 @@ public class HackathonService {
             throw new IllegalArgumentException("Hackathon or mentor is not available");
         }
         selectedHackathon.addMentor(mentors.computeIfAbsent(mentorId, id -> new Mentor()));
+    }
+
+    public void addMentorToTeam(Long teamId, Long mentorId) {
+        Team team = TeamService.findTeam(teamId);
+        Mentor mentor = mentors.get(mentorId);
+        if (mentor == null) {
+            throw new IllegalArgumentException("Mentor not found: " + mentorId);
+        }
+        if (team.getSupportMentor() != null) {
+            throw new IllegalStateException("Team already has a mentor");
+        }
+        mentor.supportTeam(team);
     }
 
     public void addJudge(Long hackathonId, Long judgeId) {
@@ -86,12 +133,48 @@ public class HackathonService {
         return findHackathon(hackathonId).getLeaderboard();
     }
 
+    public void awardPrize(Long hackathonId) {
+        selectedHackathon = findHackathon(hackathonId);
+        if (selectedHackathon.getState() != HackathonState.COMPLETED) {
+            throw new IllegalStateException("The prize can be awarded only after completing the hackathon");
+        }
+
+        Payment payment = selectedHackathon.awardPrize();
+        payment.setPaymentId(nextPaymentId++);
+        payment.execute();
+        if (paymentSystem.requestPayment(payment)) {
+            payment.confirm();
+        } else {
+            payment.reject();
+            paymentRepository.save(payment);
+            throw new IllegalStateException("The payment system rejected the prize payment");
+        }
+        paymentRepository.save(payment);
+    }
+
     public List<Hackathon> viewHackathons() {
         return new ArrayList<>(hackathons.values());
     }
 
     public Hackathon getHackathonDetails(Long hackathonId) {
         return findHackathon(hackathonId).getDetails();
+    }
+
+    public List<Team> viewRegisteredTeams(Long hackathonId) {
+        return findHackathon(hackathonId).getRegistrations().stream()
+                .filter(registration -> registration.isActive())
+                .map(registration -> registration.getTeam())
+                .toList();
+    }
+
+    public List<Mentor> viewAvailableMentors(Long teamId) {
+        Team team = TeamService.findTeam(teamId);
+        if (team.getSupportMentor() != null) {
+            return List.of();
+        }
+        return mentors.values().stream()
+                .filter(mentor -> !mentor.getSupportedTeams().contains(team))
+                .toList();
     }
 
     static Hackathon findHackathon(Long hackathonId) {
@@ -105,6 +188,7 @@ public class HackathonService {
     private boolean validateHackathonData() {
         return selectedHackathon.getName() != null && !selectedHackathon.getName().isBlank()
                 && selectedHackathon.getRegulation() != null && !selectedHackathon.getRegulation().isBlank()
+                && selectedHackathon.getLocation() != null && !selectedHackathon.getLocation().isBlank()
                 && selectedHackathon.getMaxTeamMembers() > 0
                 && selectedHackathon.getPrize() != null && selectedHackathon.getPrize() >= 0;
     }

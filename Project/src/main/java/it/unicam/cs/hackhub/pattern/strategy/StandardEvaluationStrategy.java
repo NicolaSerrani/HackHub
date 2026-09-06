@@ -11,7 +11,7 @@ public class StandardEvaluationStrategy implements EvaluationStrategy {
             throw new IllegalArgumentException("Submission cannot be null.");
         }
 
-        return 100.0;
+        return 10.0;
     }
 
 }

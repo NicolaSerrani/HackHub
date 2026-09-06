@@ -3,14 +3,20 @@ package it.unicam.cs.hackhub.model.entity;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 public class Mentor extends StaffMember {
 
     private final List<String> reportedViolations;
+    private final List<Call> proposedCalls;
+    private final List<Team> supportedTeams;
 
     public Mentor() {
         super();
         this.reportedViolations = new ArrayList<>();
+        this.proposedCalls = new ArrayList<>();
+        this.supportedTeams = new ArrayList<>();
     }
 
     public List<SupportRequest> viewSupportRequests(Hackathon hackathon) {
@@ -37,7 +43,47 @@ public class Mentor extends StaffMember {
         );
     }
 
+    public Call proposeCall(Team team, LocalDateTime dateTime, Duration duration) {
+        if (team == null) {
+            throw new IllegalArgumentException("Team cannot be null.");
+        }
+
+        Call call = new Call();
+        call.setMentor(this);
+        call.setTeam(team);
+        call.setDateTime(dateTime);
+        call.setDuration(duration);
+        if (!call.validate()) {
+            throw new IllegalArgumentException("Invalid call data.");
+        }
+
+        proposedCalls.add(call);
+        team.addCall(call);
+        return call;
+    }
+
+    public void supportTeam(Team team) {
+        if (team == null) {
+            throw new IllegalArgumentException("Team cannot be null.");
+        }
+        if (team.getSupportMentor() != null && team.getSupportMentor() != this) {
+            throw new IllegalStateException("Team already has a support mentor.");
+        }
+        if (!supportedTeams.contains(team)) {
+            supportedTeams.add(team);
+            team.setSupportMentor(this);
+        }
+    }
+
     public List<String> getReportedViolations() {
         return Collections.unmodifiableList(reportedViolations);
+    }
+
+    public List<Call> getProposedCalls() {
+        return Collections.unmodifiableList(proposedCalls);
+    }
+
+    public List<Team> getSupportedTeams() {
+        return Collections.unmodifiableList(supportedTeams);
     }
 }

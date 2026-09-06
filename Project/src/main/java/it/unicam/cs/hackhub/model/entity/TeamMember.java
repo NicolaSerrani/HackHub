@@ -4,11 +4,12 @@ import it.unicam.cs.hackhub.model.enumeration.InvitationType;
 
 import java.util.List;
 
-public class TeamMember {
+public class TeamMember extends User {
 
     private Team team;
 
     public TeamMember() {
+        super();
     }
 
     public Team createTeam(String teamName) {

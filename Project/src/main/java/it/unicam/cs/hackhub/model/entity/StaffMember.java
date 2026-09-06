@@ -6,11 +6,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class StaffMember {
+public class StaffMember extends User {
 
     private final List<Hackathon> hackathons;
 
     public StaffMember() {
+        super();
         this.hackathons = new ArrayList<>();
     }
 

@@ -28,9 +28,9 @@ public class WeightedEvaluationStrategy implements EvaluationStrategy {
             throw new IllegalArgumentException("Submission cannot be null.");
         }
 
-        double originalityScore = 90.0;
-        double technicalScore = 85.0;
-        double presentationScore = 95.0;
+        double originalityScore = 9.0;
+        double technicalScore = 8.5;
+        double presentationScore = 9.5;
 
         return originalityScore * originalityWeight
                 + technicalScore * technicalWeight

@@ -14,7 +14,7 @@ public class EvaluationService {
     private double score;
     private String comment;
 
-    public void valutaSottomissione(Long submissionId, double score, String comment) {
+    public void evaluateSubmission(Long submissionId, double score, String comment) {
         selectedSubmission = SubmissionService.findSubmission(submissionId);
         this.score = score;
         this.comment = comment;
@@ -31,7 +31,7 @@ public class EvaluationService {
     }
 
     private boolean validateScore() {
-        return score >= 0 && score <= 100;
+        return score >= 0 && score <= 10;
     }
 
     private boolean validateComment() {

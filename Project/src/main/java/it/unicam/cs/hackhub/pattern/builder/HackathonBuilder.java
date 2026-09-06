@@ -24,6 +24,11 @@ public class HackathonBuilder {
         return this;
     }
 
+    public HackathonBuilder setLocation(String location) {
+        hackathon.setLocation(location);
+        return this;
+    }
+
     public HackathonBuilder setRegistrationDeadline(LocalDate registrationDeadline) {
         hackathon.setRegistrationDeadline(registrationDeadline);
         return this;
@@ -49,7 +54,7 @@ public class HackathonBuilder {
         return this;
     }
 
-    public HackathonBuilder assignJudge(Judge judge) {
+    public HackathonBuilder setJudge(Judge judge) {
         hackathon.setJudge(judge);
         return this;
     }

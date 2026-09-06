@@ -14,11 +14,13 @@ public class Hackathon {
     private LocalDate startDate;
     private LocalDate endDate;
     private String regulation;
+    private String location;
     private LocalDate registrationDeadline;
     private Double prize;
     private int maxTeamMembers;
     private HackathonState state;
     private Team winner;
+    private Payment payment;
     private boolean leaderboardPublished;
 
     private Judge judge;
@@ -135,6 +137,22 @@ public class Hackathon {
         leaderboardPublished = true;
         state = HackathonState.COMPLETED;
     }
+
+    public Payment awardPrize() {
+        if (winner == null) {
+            throw new IllegalStateException("A winner must be declared before awarding the prize.");
+        }
+        if (payment != null) {
+            throw new IllegalStateException("The prize payment has already been created.");
+        }
+
+        Payment prizePayment = new Payment();
+        prizePayment.setAmount(prize == null ? 0 : prize);
+        prizePayment.setHackathon(this);
+        winner.addPayment(prizePayment);
+        this.payment = prizePayment;
+        return prizePayment;
+    }
     public List<Team> getLeaderboard() {
         if (winner == null) {
             return Collections.emptyList();
@@ -191,6 +209,17 @@ public class Hackathon {
         this.regulation = regulation;
     }
 
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        if (location == null || location.isBlank()) {
+            throw new IllegalArgumentException("Location cannot be null or blank.");
+        }
+        this.location = location;
+    }
+
     public LocalDate getRegistrationDeadline() {
         return registrationDeadline;
     }
@@ -217,6 +246,10 @@ public class Hackathon {
 
     public Team getWinner() {
         return winner;
+    }
+
+    public Payment getPayment() {
+        return payment;
     }
 
     public boolean isLeaderboardPublished() {

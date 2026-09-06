@@ -18,7 +18,7 @@ public class TeamController {
         teamService.inviteUsers(teamId, users);
     }
 
-    public List<Team> viewRegistratedTeams(Long hackathonId) {
+    public List<Team> viewRegisteredTeams(Long hackathonId) {
         return teamService.viewRegisteredTeams(hackathonId);
     }
 

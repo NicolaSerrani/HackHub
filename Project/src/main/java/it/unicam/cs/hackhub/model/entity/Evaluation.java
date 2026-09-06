@@ -21,7 +21,7 @@ public class Evaluation {
     }
 
     public boolean validate() {
-        return score >= 0 && score <= 100;
+        return score >= 0 && score <= 10;
     }
 
     public double calculateScore() {
@@ -71,6 +71,9 @@ public class Evaluation {
     }
 
     public void setScore(double score) {
+        if (score < 0 || score > 10) {
+            throw new IllegalArgumentException("Score must be between 0 and 10.");
+        }
         this.score = score;
     }
 

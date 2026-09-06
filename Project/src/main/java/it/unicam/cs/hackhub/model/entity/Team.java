@@ -15,6 +15,9 @@ public class Team {
     private final List<Invitation> invitations;
     private final List<Registration> registrations;
     private final List<SupportRequest> supportRequests;
+    private final List<Call> calls;
+    private final List<Payment> payments;
+    private Mentor supportMentor;
 
     public Team() {
         this.createdAt = LocalDate.now();
@@ -22,6 +25,8 @@ public class Team {
         this.invitations = new ArrayList<>();
         this.registrations = new ArrayList<>();
         this.supportRequests = new ArrayList<>();
+        this.calls = new ArrayList<>();
+        this.payments = new ArrayList<>();
     }
 
     public void addMember(TeamMember member) {
@@ -77,8 +82,28 @@ public class Team {
         }
     }
 
-    public boolean hasRegistratedTeams() {
+    public boolean hasRegisteredTeams() {
         return registrations.stream().anyMatch(Registration::isActive);
+    }
+
+    public void addCall(Call call) {
+        if (call == null) {
+            throw new IllegalArgumentException("Call cannot be null.");
+        }
+        if (!calls.contains(call)) {
+            calls.add(call);
+            call.setTeam(this);
+        }
+    }
+
+    public void addPayment(Payment payment) {
+        if (payment == null) {
+            throw new IllegalArgumentException("Payment cannot be null.");
+        }
+        if (!payments.contains(payment)) {
+            payments.add(payment);
+            payment.setRecipient(this);
+        }
     }
 
     public void reportViolation(Mentor mentor, String description) {
@@ -135,6 +160,22 @@ public class Team {
 
     public List<SupportRequest> getSupportRequests() {
         return Collections.unmodifiableList(supportRequests);
+    }
+
+    public List<Call> getCalls() {
+        return Collections.unmodifiableList(calls);
+    }
+
+    public List<Payment> getPayments() {
+        return Collections.unmodifiableList(payments);
+    }
+
+    public Mentor getSupportMentor() {
+        return supportMentor;
+    }
+
+    public void setSupportMentor(Mentor supportMentor) {
+        this.supportMentor = supportMentor;
     }
 
     public int getMemberCount() {

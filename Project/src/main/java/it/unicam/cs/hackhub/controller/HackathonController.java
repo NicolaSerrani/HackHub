@@ -1,6 +1,7 @@
 package it.unicam.cs.hackhub.controller;
 
 import it.unicam.cs.hackhub.model.entity.Hackathon;
+import it.unicam.cs.hackhub.model.entity.Mentor;
 import it.unicam.cs.hackhub.model.entity.Team;
 import it.unicam.cs.hackhub.pattern.builder.HackathonBuilder;
 import it.unicam.cs.hackhub.service.HackathonService;
@@ -23,6 +24,10 @@ public class HackathonController {
         hackathonService.addMentor(hackathonId, mentorId);
     }
 
+    public void addMentorToTeam(Long teamId, Long mentorId) {
+        hackathonService.addMentorToTeam(teamId, mentorId);
+    }
+
     public void addJudge(Long hackathonId, Long judgeId) {
         hackathonService.addJudge(hackathonId, judgeId);
     }
@@ -39,11 +44,23 @@ public class HackathonController {
         return hackathonService.getLeaderboard(hackathonId);
     }
 
+    public void awardPrize(Long hackathonId) {
+        hackathonService.awardPrize(hackathonId);
+    }
+
     public List<Hackathon> viewHackathons() {
         return hackathonService.viewHackathons();
     }
 
     public Hackathon getHackathonDetails(Long hackathonId) {
         return hackathonService.getHackathonDetails(hackathonId);
+    }
+
+    public List<Team> viewRegisteredTeams(Long hackathonId) {
+        return hackathonService.viewRegisteredTeams(hackathonId);
+    }
+
+    public List<Mentor> viewAvailableMentors(Long teamId) {
+        return hackathonService.viewAvailableMentors(teamId);
     }
 }

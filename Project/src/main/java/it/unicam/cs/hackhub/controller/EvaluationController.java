@@ -7,6 +7,6 @@ public class EvaluationController {
     private final EvaluationService evaluationService = new EvaluationService();
 
     public void evaluateSubmission(Long submissionId, double score, String comment) {
-        evaluationService.valutaSottomissione(submissionId, score, comment);
+        evaluationService.evaluateSubmission(submissionId, score, comment);
     }
 }
