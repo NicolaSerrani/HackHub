@@ -14,21 +14,27 @@ import org.springframework.transaction.annotation.Transactional;
 public class EvaluationService {
     private final EvaluationRepository evaluationRepository;
     private final SubmissionRepository submissionRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     public EvaluationService(EvaluationRepository evaluationRepository,
                              SubmissionRepository submissionRepository,
-                             UserRepository userRepository) {
+                             UserService userService) {
         this.evaluationRepository = evaluationRepository;
         this.submissionRepository = submissionRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     public Evaluation evaluateSubmission(Long submissionId, Long judgeId, double score, String comment) {
         Submission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new IllegalArgumentException("Submission not found: " + submissionId));
-        Judge judge = userRepository.findById(judgeId).filter(Judge.class::isInstance).map(Judge.class::cast)
-                .orElseThrow(() -> new IllegalArgumentException("Judge not found: " + judgeId));
+        Judge judge = userService.requireRole(Judge.class);
+        if (!judge.getUserId().equals(judgeId)) {
+            throw new IllegalStateException("A judge can evaluate only as themselves.");
+        }
+        if (submission.getHackathon().getJudge() == null
+                || !judge.getUserId().equals(submission.getHackathon().getJudge().getUserId())) {
+            throw new IllegalStateException("Judge is not assigned to this hackathon.");
+        }
         if (comment == null || comment.isBlank()) {
             throw new IllegalArgumentException("Evaluation comment cannot be blank");
         }

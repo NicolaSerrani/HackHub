@@ -1,13 +1,14 @@
 package it.unicam.cs.hackhub.service;
 
 import it.unicam.cs.hackhub.model.entity.Invitation;
+import it.unicam.cs.hackhub.model.entity.Judge;
+import it.unicam.cs.hackhub.model.entity.Mentor;
 import it.unicam.cs.hackhub.model.entity.TeamMember;
 import it.unicam.cs.hackhub.model.enumeration.InvitationType;
 import it.unicam.cs.hackhub.repository.InvitationRepository;
 import it.unicam.cs.hackhub.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.hibernate.Hibernate;
 
 import java.util.List;
 
@@ -16,22 +17,27 @@ import java.util.List;
 public class InvitationService {
     private final InvitationRepository invitationRepository;
     private final UserRepository userRepository;
+    private final UserService userService;
 
-    public InvitationService(InvitationRepository invitationRepository, UserRepository userRepository) {
+    public InvitationService(InvitationRepository invitationRepository, UserRepository userRepository,
+                             UserService userService) {
         this.invitationRepository = invitationRepository;
         this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @Transactional(readOnly = true)
     public List<Invitation> viewReceivedInvitations(Long userId) {
+        userService.requireCurrentUser(userId);
         return invitationRepository.findByReceiver_UserId(userId);
     }
 
     public Invitation acceptTeamInvitation(Long invitationId) {
+        TeamMember member = userService.requireRole(TeamMember.class);
         Invitation invitation = findInvitation(invitationId, InvitationType.TEAM);
-        Object receiver = Hibernate.unproxy(invitation.getReceiver());
-        if (!(receiver instanceof TeamMember member)) {
-            throw new IllegalStateException("A team invitation can only be accepted by a TEAM_MEMBER");
+        requireReceiver(invitation, member.getUserId());
+        if (member.hasTeam()) {
+            throw new IllegalStateException("A team member already belongs to a team.");
         }
         if (invitation.getTeam() == null) {
             throw new IllegalStateException("Invitation is not associated with a team");
@@ -43,11 +49,17 @@ public class InvitationService {
     }
 
     public Invitation acceptMentorInvitation(Long invitationId) {
-        return accept(findInvitation(invitationId, InvitationType.MENTOR));
+        Mentor mentor = userService.requireRole(Mentor.class);
+        Invitation invitation = findInvitation(invitationId, InvitationType.MENTOR);
+        requireReceiver(invitation, mentor.getUserId());
+        return accept(invitation);
     }
 
     public Invitation acceptJudgeInvitation(Long invitationId) {
-        return accept(findInvitation(invitationId, InvitationType.JUDGE));
+        Judge judge = userService.requireRole(Judge.class);
+        Invitation invitation = findInvitation(invitationId, InvitationType.JUDGE);
+        requireReceiver(invitation, judge.getUserId());
+        return accept(invitation);
     }
 
     private Invitation accept(Invitation invitation) {
@@ -62,5 +74,11 @@ public class InvitationService {
             throw new IllegalStateException("Invitation has already been processed");
         }
         return invitation;
+    }
+
+    private void requireReceiver(Invitation invitation, Long userId) {
+        if (!invitation.getReceiver().getUserId().equals(userId)) {
+            throw new IllegalStateException("Only the invitation recipient can accept it.");
+        }
     }
 }

@@ -7,6 +7,8 @@ import it.unicam.cs.hackhub.model.entity.Mentor;
 import it.unicam.cs.hackhub.model.entity.Payment;
 import it.unicam.cs.hackhub.model.entity.Registration;
 import it.unicam.cs.hackhub.model.entity.Team;
+import it.unicam.cs.hackhub.model.entity.TeamMember;
+import it.unicam.cs.hackhub.model.entity.Organizer;
 import it.unicam.cs.hackhub.model.enumeration.HackathonState;
 import it.unicam.cs.hackhub.pattern.builder.HackathonBuilder;
 import it.unicam.cs.hackhub.repository.HackathonRepository;
@@ -28,19 +30,22 @@ public class HackathonService {
     private final RegistrationRepository registrationRepository;
     private final PaymentRepository paymentRepository;
     private final PaymentSystem paymentSystem;
+    private final UserService userService;
 
     public HackathonService(HackathonRepository hackathonRepository, TeamRepository teamRepository,
                             UserRepository userRepository, RegistrationRepository registrationRepository,
-                            PaymentRepository paymentRepository, PaymentSystem paymentSystem) {
+                            PaymentRepository paymentRepository, PaymentSystem paymentSystem, UserService userService) {
         this.hackathonRepository = hackathonRepository;
         this.teamRepository = teamRepository;
         this.userRepository = userRepository;
         this.registrationRepository = registrationRepository;
         this.paymentRepository = paymentRepository;
         this.paymentSystem = paymentSystem;
+        this.userService = userService;
     }
 
     public Hackathon createHackathon(HackathonBuilder builder) {
+        userService.requireRole(Organizer.class);
         if (builder == null) {
             throw new IllegalArgumentException("Hackathon builder cannot be null");
         }
@@ -50,6 +55,7 @@ public class HackathonService {
     }
 
     public Registration registerTeam(Long hackathonId, Long teamId) {
+        requireOwnTeam(teamId);
         Hackathon hackathon = findHackathon(hackathonId);
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new IllegalArgumentException("Team not found: " + teamId));
@@ -62,6 +68,7 @@ public class HackathonService {
     }
 
     public Hackathon addMentor(Long hackathonId, Long mentorId) {
+        userService.requireRole(Organizer.class);
         Hackathon hackathon = findHackathon(hackathonId);
         Mentor mentor = findMentor(mentorId);
         hackathon.addMentor(mentor);
@@ -69,6 +76,7 @@ public class HackathonService {
     }
 
     public Team addMentorToTeam(Long teamId, Long mentorId) {
+        userService.requireRole(Organizer.class);
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new IllegalArgumentException("Team not found: " + teamId));
         findMentor(mentorId).supportTeam(team);
@@ -76,6 +84,7 @@ public class HackathonService {
     }
 
     public Hackathon addJudge(Long hackathonId, Long judgeId) {
+        userService.requireRole(Organizer.class);
         Hackathon hackathon = findHackathon(hackathonId);
         Judge judge = userRepository.findById(judgeId).filter(Judge.class::isInstance).map(Judge.class::cast)
                 .orElseThrow(() -> new IllegalArgumentException("Judge not found: " + judgeId));
@@ -84,12 +93,14 @@ public class HackathonService {
     }
 
     public Hackathon changeState(Long hackathonId, HackathonState state) {
+        userService.requireRole(Organizer.class);
         Hackathon hackathon = findHackathon(hackathonId);
         hackathon.setState(state);
         return hackathonRepository.save(hackathon);
     }
 
     public Hackathon declareWinner(Long hackathonId, Long teamId) {
+        userService.requireRole(Organizer.class);
         Hackathon hackathon = findHackathon(hackathonId);
         Team team = registrationRepository.findByHackathon_HackathonId(hackathonId).stream()
                 .filter(Registration::isActive).map(Registration::getTeam)
@@ -107,6 +118,7 @@ public class HackathonService {
     }
 
     public Hackathon publishLeaderboard(Long hackathonId) {
+        userService.requireRole(Organizer.class);
         Hackathon hackathon = findHackathon(hackathonId);
         if (hackathon.isLeaderboardPublished()) {
             throw new IllegalStateException("Leaderboard has already been published");
@@ -117,10 +129,12 @@ public class HackathonService {
 
     @Transactional(readOnly = true)
     public List<Team> getLeaderboard(Long hackathonId) {
+        userService.requireAuthenticated();
         return findHackathon(hackathonId).getLeaderboard();
     }
 
     public Payment awardPrize(Long hackathonId) {
+        userService.requireRole(Organizer.class);
         Hackathon hackathon = findHackathon(hackathonId);
         if (hackathon.getState() != HackathonState.COMPLETED) {
             throw new IllegalStateException("The prize can be awarded only after completing the hackathon");
@@ -142,21 +156,25 @@ public class HackathonService {
 
     @Transactional(readOnly = true)
     public List<Hackathon> viewHackathons() {
+        userService.requireAuthenticated();
         return hackathonRepository.findAll();
     }
 
     @Transactional(readOnly = true)
     public Hackathon getHackathonDetails(Long hackathonId) {
+        userService.requireAuthenticated();
         return findHackathon(hackathonId);
     }
 
     @Transactional(readOnly = true)
     public List<Team> viewRegisteredTeams(Long hackathonId) {
+        userService.requireRole(Organizer.class);
         return registrationRepository.findActiveTeams(hackathonId);
     }
 
     @Transactional(readOnly = true)
     public List<Mentor> viewAvailableMentors(Long teamId) {
+        userService.requireRole(Organizer.class);
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new IllegalArgumentException("Team not found: " + teamId));
         if (team.getSupportMentor() != null) {
@@ -174,6 +192,14 @@ public class HackathonService {
     private Mentor findMentor(Long mentorId) {
         return userRepository.findById(mentorId).filter(Mentor.class::isInstance).map(Mentor.class::cast)
                 .orElseThrow(() -> new IllegalArgumentException("Mentor not found: " + mentorId));
+    }
+
+    private TeamMember requireOwnTeam(Long teamId) {
+        TeamMember member = userService.requireRole(TeamMember.class);
+        if (!member.getTeam().getTeamId().equals(teamId)) {
+            throw new IllegalStateException("A team member can register only their own team.");
+        }
+        return member;
     }
 
     private void validate(Hackathon hackathon) {

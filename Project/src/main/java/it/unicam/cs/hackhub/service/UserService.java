@@ -73,6 +73,27 @@ public class UserService {
         loggedInUserId = null;
     }
 
+    public synchronized User requireAuthenticated() {
+        if (loggedInUserId == null) {
+            throw new IllegalStateException("Login is required.");
+        }
+        return findUser(loggedInUserId);
+    }
+
+    public synchronized <T extends User> T requireRole(Class<T> role) {
+        User user = requireAuthenticated();
+        if (!role.isInstance(user)) {
+            throw new IllegalStateException("This operation requires role: " + role.getSimpleName());
+        }
+        return role.cast(user);
+    }
+
+    public synchronized void requireCurrentUser(Long userId) {
+        if (!requireAuthenticated().getUserId().equals(userId)) {
+            throw new IllegalStateException("This operation is allowed only for the logged-in user.");
+        }
+    }
+
     @Transactional(readOnly = true)
     public User findUser(Long userId) {
         return userRepository.findById(userId)

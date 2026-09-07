@@ -36,7 +36,21 @@ class HackHubIntegrationTest {
     @Test
     void persistsCoreUseCaseInH2() {
         User member = userService.register("Mario Rossi", "mario@example.test", "password123", "TEAM_MEMBER");
+        User organizer = userService.register("Anna Neri", "anna@example.test", "password123", "ORGANIZER");
+        userService.login(member.getEmail(), "password123");
         Team team = teamService.createTeam("Byte Builders");
+        assertThatThrownBy(() -> hackathonService.createHackathon(new HackathonBuilder()
+                .setName("Non autorizzato")
+                .setRegulation("Regolamento")
+                .setLocation("Camerino")
+                .setRegistrationDeadline(LocalDate.now().plusDays(2))
+                .setStartDate(LocalDate.now().plusDays(3))
+                .setEndDate(LocalDate.now().plusDays(5))
+                .setPrize(1000)
+                .setMaxTeamMembers(5))).isInstanceOf(IllegalStateException.class);
+        userService.logout(member.getUserId());
+
+        userService.login(organizer.getEmail(), "password123");
         Hackathon hackathon = hackathonService.createHackathon(new HackathonBuilder()
                 .setName("HackHub Test")
                 .setRegulation("Regolamento di test")
@@ -46,8 +60,11 @@ class HackHubIntegrationTest {
                 .setEndDate(LocalDate.now().plusDays(5))
                 .setPrize(1000)
                 .setMaxTeamMembers(5));
+        userService.logout(organizer.getUserId());
 
+        userService.login(member.getEmail(), "password123");
         hackathonService.registerTeam(hackathon.getHackathonId(), team.getTeamId());
+        userService.logout(member.getUserId());
 
         assertThat(userRepository.findById(member.getUserId())).isPresent();
         assertThat(teamRepository.findById(team.getTeamId())).isPresent();

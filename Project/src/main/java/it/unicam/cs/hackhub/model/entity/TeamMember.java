@@ -89,6 +89,10 @@ public class TeamMember extends User {
         return team;
     }
 
+    public boolean hasTeam() {
+        return team != null;
+    }
+
     public void setTeam(Team team) {
         if (team == null) {
             throw new IllegalArgumentException("Team cannot be null.");
