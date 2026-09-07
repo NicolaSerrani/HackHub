@@ -1,5 +1,6 @@
 package it.unicam.cs.hackhub.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -53,6 +54,7 @@ public class Organizer extends StaffMember {
         getCurrentHackathon().setWinner(team);
     }
 
+    @JsonIgnore
     public Hackathon getCurrentHackathon() {
         if (currentHackathon == null) {
             throw new IllegalStateException("No hackathon has been selected.");

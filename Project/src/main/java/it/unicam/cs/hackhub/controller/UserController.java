@@ -31,6 +31,12 @@ public class UserController {
         return userService.login(request.email(), request.password());
     }
 
+    @PostMapping("/{userId}/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logout(@PathVariable Long userId) {
+        userService.logout(userId);
+    }
+
     @GetMapping("/{userId}")
     public User getUser(@PathVariable Long userId) {
         return userService.findUser(userId);

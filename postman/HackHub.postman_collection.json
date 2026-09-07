@@ -1,0 +1,653 @@
+﻿{
+    "info":  {
+                 "name":  "HackHub - 29 casi d\u0027uso",
+                 "description":  "Collection ricavata dai 29 sequence diagram dell\u0027Iterazione 5, organizzata per attore. Impostare gli ID nelle variabili della collection usando gli ID restituiti dalle chiamate di creazione.",
+                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+             },
+    "variable":  [
+                     {
+                         "key":  "baseUrl",
+                         "value":  "http://localhost:8888"
+                     },
+                     {
+                         "key":  "userId",
+                         "value":  "1"
+                     },
+                     {
+                         "key":  "inviteeId",
+                         "value":  "2"
+                     },
+                     {
+                         "key":  "mentorId",
+                         "value":  "3"
+                     },
+                     {
+                         "key":  "judgeId",
+                         "value":  "4"
+                     },
+                     {
+                         "key":  "teamId",
+                         "value":  "1"
+                     },
+                     {
+                         "key":  "hackathonId",
+                         "value":  "1"
+                     },
+                     {
+                         "key":  "submissionId",
+                         "value":  "1"
+                     },
+                     {
+                         "key":  "invitationId",
+                         "value":  "1"
+                     },
+                     {
+                         "key":  "mentorInvitationId",
+                         "value":  "2"
+                     },
+                     {
+                         "key":  "judgeInvitationId",
+                         "value":  "3"
+                     },
+                     {
+                         "key":  "supportRequestId",
+                         "value":  "1"
+                     }
+                 ],
+    "item":  [
+                 {
+                     "name":  "Guest",
+                     "description":  "Casi d\u0027uso per utenti non autenticati.",
+                     "item":  [
+                                  {
+                                      "name":  "01 - Registrazione",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Registra utente",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Content-Type",
+                                                                                          "value":  "application/json"
+                                                                                      }
+                                                                                  ],
+                                                                       "body":  {
+                                                                                    "mode":  "raw",
+                                                                                    "raw":  "{\n  \"name\": \"Mario Rossi\",\n  \"email\": \"mario.rossi@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"TEAM_MEMBER\"\n}"
+                                                                                },
+                                                                       "url":  "{{baseUrl}}/api/users/register"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "02 - Login",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Esegui login",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Content-Type",
+                                                                                          "value":  "application/json"
+                                                                                      }
+                                                                                  ],
+                                                                       "body":  {
+                                                                                    "mode":  "raw",
+                                                                                    "raw":  "{\n  \"email\": \"mario.rossi@example.com\",\n  \"password\": \"password123\"\n}"
+                                                                                },
+                                                                       "url":  "{{baseUrl}}/api/users/login"
+                                                                   }
+                                                   }
+                                               ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Utente",
+                     "description":  "Casi d\u0027uso comuni a ogni utente autenticato.",
+                     "item":  [
+                                  {
+                                      "name":  "08 - Gestione inviti ricevuti",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Visualizza inviti ricevuti",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "header":  [
+
+                                                                                  ],
+                                                                       "url":  "{{baseUrl}}/api/invitations/received/{{userId}}"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "18 - Visualizza classifica",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Visualizza classifica",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "header":  [
+
+                                                                                  ],
+                                                                       "url":  "{{baseUrl}}/api/hackathons/{{hackathonId}}/leaderboard"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "20 - Logout",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Esegui logout",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+
+                                                                                  ],
+                                                                       "url":  "{{baseUrl}}/api/users/{{userId}}/logout"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "21 - Consulta elenco hackathon",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Elenca hackathon",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "header":  [
+
+                                                                                  ],
+                                                                       "url":  "{{baseUrl}}/api/hackathons"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "22 - Consulta dettagli hackathon",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Dettagli hackathon",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "header":  [
+
+                                                                                  ],
+                                                                       "url":  "{{baseUrl}}/api/hackathons/{{hackathonId}}"
+                                                                   }
+                                                   }
+                                               ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Team Member",
+                     "description":  "Casi d\u0027uso del membro di un team.",
+                     "item":  [
+                                  {
+                                      "name":  "04 - Crea team",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Crea team",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Content-Type",
+                                                                                          "value":  "application/json"
+                                                                                      }
+                                                                                  ],
+                                                                       "body":  {
+                                                                                    "mode":  "raw",
+                                                                                    "raw":  "{\n  \"name\": \"Byte Builders\"\n}"
+                                                                                },
+                                                                       "url":  "{{baseUrl}}/api/teams"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "05 - Invita utenti nel team",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Invita utenti",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Content-Type",
+                                                                                          "value":  "application/json"
+                                                                                      }
+                                                                                  ],
+                                                                       "body":  {
+                                                                                    "mode":  "raw",
+                                                                                    "raw":  "{\n  \"userIds\": [{{inviteeId}}]\n}"
+                                                                                },
+                                                                       "url":  "{{baseUrl}}/api/teams/{{teamId}}/invitations"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "06 - Iscrive team",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Iscrivi team all\u0027hackathon",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+
+                                                                                  ],
+                                                                       "url":  "{{baseUrl}}/api/hackathons/{{hackathonId}}/teams/{{teamId}}"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "07 - Invia sottomissione",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Salva bozza",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Content-Type",
+                                                                                          "value":  "application/json"
+                                                                                      }
+                                                                                  ],
+                                                                       "body":  {
+                                                                                    "mode":  "raw",
+                                                                                    "raw":  "{\n  \"teamId\": {{teamId}},\n  \"hackathonId\": {{hackathonId}},\n  \"title\": \"EcoTrack\",\n  \"description\": \"Piattaforma per monitorare i consumi\",\n  \"repositoryUrl\": \"https://github.com/example/ecotrack\"\n}"
+                                                                                },
+                                                                       "url":  "{{baseUrl}}/api/submissions"
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Invia sottomissione",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+
+                                                                                  ],
+                                                                       "url":  "{{baseUrl}}/api/submissions/{{submissionId}}/submit"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "09 - Accetta invito team",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Accetta invito team",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+
+                                                                                  ],
+                                                                       "url":  "{{baseUrl}}/api/invitations/{{invitationId}}/accept/team"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "13 - Invia richiesta di supporto",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Crea richiesta di supporto",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Content-Type",
+                                                                                          "value":  "application/json"
+                                                                                      }
+                                                                                  ],
+                                                                       "body":  {
+                                                                                    "mode":  "raw",
+                                                                                    "raw":  "{\n  \"teamId\": {{teamId}},\n  \"mentorId\": {{mentorId}},\n  \"hackathonId\": {{hackathonId}},\n  \"title\": \"Problema tecnico\",\n  \"description\": \"Serve supporto per il deploy\"\n}"
+                                                                                },
+                                                                       "url":  "{{baseUrl}}/api/support-requests"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "19 - Aggiorna sottomissione",
+                                      "description":  "Eseguire mentre la sottomissione Ã¨ ancora in stato DRAFT.",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Aggiorna bozza",
+                                                       "request":  {
+                                                                       "method":  "PUT",
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Content-Type",
+                                                                                          "value":  "application/json"
+                                                                                      }
+                                                                                  ],
+                                                                       "body":  {
+                                                                                    "mode":  "raw",
+                                                                                    "raw":  "{\n  \"title\": \"EcoTrack 2.0\",\n  \"description\": \"Versione aggiornata della piattaforma\",\n  \"repositoryUrl\": \"https://github.com/example/ecotrack\"\n}"
+                                                                                },
+                                                                       "url":  "{{baseUrl}}/api/submissions/{{submissionId}}"
+                                                                   }
+                                                   }
+                                               ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Mentor",
+                     "description":  "Casi d\u0027uso del mentore.",
+                     "item":  [
+                                  {
+                                      "name":  "10 - Accetta invito mentore",
+                                      "description":  "Richiede l\u0027ID di un invito MENTOR giÃ  presente nel database.",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Accetta invito mentore",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+
+                                                                                  ],
+                                                                       "url":  "{{baseUrl}}/api/invitations/{{mentorInvitationId}}/accept/mentor"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "14 - Visualizza richieste di supporto",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Visualizza richieste del mentore",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "header":  [
+
+                                                                                  ],
+                                                                       "url":  "{{baseUrl}}/api/support-requests/mentor/{{mentorId}}"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "17 - Gestisce richiesta di supporto",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Gestisci richiesta",
+                                                       "request":  {
+                                                                       "method":  "PUT",
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Content-Type",
+                                                                                          "value":  "application/json"
+                                                                                      }
+                                                                                  ],
+                                                                       "body":  {
+                                                                                    "mode":  "raw",
+                                                                                    "raw":  "{\n  \"response\": \"Verificare le variabili d\u0027ambiente del deploy\",\n  \"state\": \"RESOLVED\"\n}"
+                                                                                },
+                                                                       "url":  "{{baseUrl}}/api/support-requests/{{supportRequestId}}"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "25 - Segnala violazioni del team",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Segnala violazione",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Content-Type",
+                                                                                          "value":  "application/json"
+                                                                                      }
+                                                                                  ],
+                                                                       "body":  {
+                                                                                    "mode":  "raw",
+                                                                                    "raw":  "{\n  \"mentorId\": {{mentorId}},\n  \"description\": \"Comportamento non conforme al regolamento\"\n}"
+                                                                                },
+                                                                       "url":  "{{baseUrl}}/api/teams/{{teamId}}/violations"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "27 - Propone Call",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Visualizza fasce orarie disponibili",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "header":  [
+
+                                                                                  ],
+                                                                       "url":  "{{baseUrl}}/api/calls/available-slots"
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Proponi call",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Content-Type",
+                                                                                          "value":  "application/json"
+                                                                                      }
+                                                                                  ],
+                                                                       "body":  {
+                                                                                    "mode":  "raw",
+                                                                                    "raw":  "{\n  \"mentorId\": {{mentorId}},\n  \"teamId\": {{teamId}},\n  \"dateTime\": \"2030-05-11T10:00:00\",\n  \"durationMinutes\": 60\n}"
+                                                                                },
+                                                                       "url":  "{{baseUrl}}/api/calls"
+                                                                   }
+                                                   }
+                                               ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Judge",
+                     "description":  "Casi d\u0027uso del giudice.",
+                     "item":  [
+                                  {
+                                      "name":  "11 - Accetta invito giudice",
+                                      "description":  "Richiede l\u0027ID di un invito JUDGE giÃ  presente nel database.",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Accetta invito giudice",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+
+                                                                                  ],
+                                                                       "url":  "{{baseUrl}}/api/invitations/{{judgeInvitationId}}/accept/judge"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "12 - Valuta sottomissione",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Registra valutazione",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Content-Type",
+                                                                                          "value":  "application/json"
+                                                                                      }
+                                                                                  ],
+                                                                       "body":  {
+                                                                                    "mode":  "raw",
+                                                                                    "raw":  "{\n  \"judgeId\": {{judgeId}},\n  \"score\": 8.5,\n  \"comment\": \"Progetto completo e ben documentato\"\n}"
+                                                                                },
+                                                                       "url":  "{{baseUrl}}/api/submissions/{{submissionId}}/evaluation"
+                                                                   }
+                                                   }
+                                               ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Organizer",
+                     "description":  "Casi d\u0027uso dell\u0027organizzatore.",
+                     "item":  [
+                                  {
+                                      "name":  "03 - Crea nuovo hackathon",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Crea hackathon",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Content-Type",
+                                                                                          "value":  "application/json"
+                                                                                      }
+                                                                                  ],
+                                                                       "body":  {
+                                                                                    "mode":  "raw",
+                                                                                    "raw":  "{\n  \"name\": \"HackHub Challenge\",\n  \"regulation\": \"Regolamento ufficiale\",\n  \"location\": \"Camerino\",\n  \"registrationDeadline\": \"2027-05-01\",\n  \"startDate\": \"2027-05-10\",\n  \"endDate\": \"2027-05-12\",\n  \"prize\": 5000,\n  \"maxTeamMembers\": 5\n}"
+                                                                                },
+                                                                       "url":  "{{baseUrl}}/api/hackathons"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "15 - Proclama team vincitore",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Proclama vincitore",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+
+                                                                                  ],
+                                                                       "url":  "{{baseUrl}}/api/hackathons/{{hackathonId}}/winner/{{teamId}}"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "16 - Pubblica classifica finale",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Pubblica classifica",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+
+                                                                                  ],
+                                                                       "url":  "{{baseUrl}}/api/hackathons/{{hackathonId}}/leaderboard/publish"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "23 - Visualizza team iscritti",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Team iscritti",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "header":  [
+
+                                                                                  ],
+                                                                       "url":  "{{baseUrl}}/api/hackathons/{{hackathonId}}/teams"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "26 - Aggiungi mentore ad un team",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Visualizza mentori disponibili",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "header":  [
+
+                                                                                  ],
+                                                                       "url":  "{{baseUrl}}/api/hackathons/teams/{{teamId}}/available-mentors"
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Aggiungi mentore al team",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+
+                                                                                  ],
+                                                                       "url":  "{{baseUrl}}/api/hackathons/teams/{{teamId}}/mentor/{{mentorId}}"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "28 - Nomina giudice",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Nomina giudice",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+
+                                                                                  ],
+                                                                       "url":  "{{baseUrl}}/api/hackathons/{{hackathonId}}/judges/{{judgeId}}"
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "29 - Eroga premio",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Eroga premio",
+                                                       "request":  {
+                                                                       "method":  "POST",
+                                                                       "header":  [
+
+                                                                                  ],
+                                                                       "url":  "{{baseUrl}}/api/hackathons/{{hackathonId}}/prize"
+                                                                   }
+                                                   }
+                                               ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Staff Member",
+                     "description":  "Caso d\u0027uso condiviso da Mentor, Judge e Organizer.",
+                     "item":  [
+                                  {
+                                      "name":  "24 - Visualizza sottomissioni",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Sottomissioni dell\u0027hackathon",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "header":  [
+
+                                                                                  ],
+                                                                       "url":  "{{baseUrl}}/api/submissions/hackathon/{{hackathonId}}"
+                                                                   }
+                                                   }
+                                               ]
+                                  }
+                              ]
+                 }
+             ]
+}

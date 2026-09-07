@@ -59,6 +59,10 @@ public class UserService {
         return user;
     }
 
+    public void logout(Long userId) {
+        findUser(userId).logout();
+    }
+
     @Transactional(readOnly = true)
     public User findUser(Long userId) {
         return userRepository.findById(userId)

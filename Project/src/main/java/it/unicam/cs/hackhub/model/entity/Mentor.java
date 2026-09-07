@@ -93,6 +93,7 @@ public class Mentor extends StaffMember {
         }
     }
 
+    @JsonIgnore
     public List<String> getReportedViolations() {
         return Collections.unmodifiableList(reportedViolations);
     }
