@@ -15,6 +15,8 @@ import java.util.Locale;
 @Transactional
 public class UserService {
     private final UserRepository userRepository;
+    // ponytail: one global session; use per-client Spring Security sessions when multiple clients are required.
+    private Long loggedInUserId;
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -50,17 +52,25 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public User login(String email, String password) {
+    public synchronized User login(String email, String password) {
+        if (loggedInUserId != null) {
+            throw new IllegalStateException("An user is already logged in. Logout is required first.");
+        }
         User user = userRepository.findByEmailIgnoreCase(email == null ? "" : email)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
         if (!user.authenticate(email, password)) {
             throw new IllegalArgumentException("Invalid email or password");
         }
+        loggedInUserId = user.getUserId();
         return user;
     }
 
-    public void logout(Long userId) {
+    public synchronized void logout(Long userId) {
+        if (!userId.equals(loggedInUserId)) {
+            throw new IllegalStateException("Only the logged-in user can log out.");
+        }
         findUser(userId).logout();
+        loggedInUserId = null;
     }
 
     @Transactional(readOnly = true)

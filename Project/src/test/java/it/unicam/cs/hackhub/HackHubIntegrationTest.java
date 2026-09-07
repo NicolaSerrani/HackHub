@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
@@ -53,5 +54,20 @@ class HackHubIntegrationTest {
         assertThat(hackathonRepository.findById(hackathon.getHackathonId())).isPresent();
         assertThat(registrationRepository.existsByHackathon_HackathonIdAndTeam_TeamId(
                 hackathon.getHackathonId(), team.getTeamId())).isTrue();
+    }
+
+    @Test
+    void preventsAnotherLoginUntilLogout() {
+        User first = userService.register("Primo Utente", "first@example.test", "password123");
+        User second = userService.register("Secondo Utente", "second@example.test", "password123");
+
+        userService.login(first.getEmail(), "password123");
+        assertThatThrownBy(() -> userService.login(second.getEmail(), "password123"))
+                .isInstanceOf(IllegalStateException.class);
+
+        userService.logout(first.getUserId());
+        assertThat(userService.login(second.getEmail(), "password123").getUserId())
+                .isEqualTo(second.getUserId());
+        userService.logout(second.getUserId());
     }
 }
