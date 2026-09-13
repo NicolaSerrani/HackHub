@@ -41,6 +41,10 @@ public class Invitation {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id")
     private Team team;
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hackathon_id")
+    private Hackathon hackathon;
 
     public Invitation() {
         this.state = InvitationState.PENDING;
@@ -123,6 +127,14 @@ public class Invitation {
 
     public void setTeam(Team team) {
         this.team = team;
+    }
+
+    public Hackathon getHackathon() {
+        return hackathon;
+    }
+
+    public void setHackathon(Hackathon hackathon) {
+        this.hackathon = hackathon;
     }
 
 }

@@ -3,9 +3,10 @@ package it.unicam.cs.hackhub.service;
 import it.unicam.cs.hackhub.model.entity.Hackathon;
 import it.unicam.cs.hackhub.model.entity.Submission;
 import it.unicam.cs.hackhub.model.entity.Team;
+import it.unicam.cs.hackhub.model.entity.User;
 import it.unicam.cs.hackhub.model.entity.TeamMember;
-import it.unicam.cs.hackhub.model.entity.StaffMember;
 import it.unicam.cs.hackhub.repository.HackathonRepository;
+import it.unicam.cs.hackhub.repository.RegistrationRepository;
 import it.unicam.cs.hackhub.repository.SubmissionRepository;
 import it.unicam.cs.hackhub.repository.TeamRepository;
 import org.springframework.stereotype.Service;
@@ -19,13 +20,16 @@ public class SubmissionService {
     private final SubmissionRepository submissionRepository;
     private final TeamRepository teamRepository;
     private final HackathonRepository hackathonRepository;
+    private final RegistrationRepository registrationRepository;
     private final UserService userService;
 
     public SubmissionService(SubmissionRepository submissionRepository, TeamRepository teamRepository,
-                             HackathonRepository hackathonRepository, UserService userService) {
+                             HackathonRepository hackathonRepository, RegistrationRepository registrationRepository,
+                             UserService userService) {
         this.submissionRepository = submissionRepository;
         this.teamRepository = teamRepository;
         this.hackathonRepository = hackathonRepository;
+        this.registrationRepository = registrationRepository;
         this.userService = userService;
     }
 
@@ -36,6 +40,9 @@ public class SubmissionService {
                 .orElseThrow(() -> new IllegalArgumentException("Team not found: " + teamId));
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
                 .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        if (!registrationRepository.existsByHackathon_HackathonIdAndTeam_TeamId(hackathonId, teamId)) {
+            throw new IllegalStateException("The team is not registered for this hackathon");
+        }
         Submission submission = new Submission();
         submission.setTeam(team);
         submission.setHackathon(hackathon);
@@ -69,7 +76,7 @@ public class SubmissionService {
 
     @Transactional(readOnly = true)
     public List<Submission> viewSubmissions(Long hackathonId) {
-        userService.requireRole(StaffMember.class);
+        userService.requireStaffMember();
         return submissionRepository.findByHackathon_HackathonId(hackathonId);
     }
 
@@ -81,7 +88,7 @@ public class SubmissionService {
     }
 
     private TeamMember requireOwnTeam(Long teamId) {
-        TeamMember member = userService.requireRole(TeamMember.class);
+        TeamMember member = userService.requireTeamMember();
         if (!member.getTeam().getTeamId().equals(teamId)) {
             throw new IllegalStateException("A team member can manage only their own submissions.");
         }

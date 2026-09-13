@@ -1,7 +1,7 @@
 ﻿{
     "info":  {
-                 "name":  "HackHub - 29 casi d\u0027uso",
-                 "description":  "Collection ricavata dai 29 sequence diagram dell\u0027Iterazione 5, organizzata per attore. Impostare gli ID nelle variabili della collection usando gli ID restituiti dalle chiamate di creazione.",
+                 "name":  "HackHub",
+                 "description":  "Collection dei 29 casi d\u0027uso dell\u0027Iterazione 5, organizzata per attore. La registrazione accetta solo USER o STAFF; TeamMember, Mentor, Judge e Organizer sono ruoli acquisiti dalle relazioni. Eseguire login e logout separatamente per l\u0027attore indicato nelle cartelle. Riavviare il backend per ripristinare inviti, bozze e dati consumati. Password di tutti gli utenti seed: password123.",
                  "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
              },
     "variable":  [
@@ -15,7 +15,7 @@
                      },
                      {
                          "key":  "inviteeId",
-                         "value":  "2"
+                         "value":  "10"
                      },
                      {
                          "key":  "mentorId",
@@ -35,25 +35,62 @@
                      },
                      {
                          "key":  "submissionId",
+                         "value":  "2"
+                     },
+                     {
+                         "key":  "draftSubmissionId",
+                         "value":  "3"
+                     },
+                     {
+                         "key":  "evaluationSubmissionId",
                          "value":  "1"
                      },
                      {
                          "key":  "invitationId",
-                         "value":  "1"
+                         "value":  "3"
                      },
                      {
                          "key":  "mentorInvitationId",
-                         "value":  "2"
+                         "value":  "4"
                      },
                      {
                          "key":  "judgeInvitationId",
-                         "value":  "3"
+                         "value":  "5"
                      },
                      {
                          "key":  "supportRequestId",
                          "value":  "1"
+                     },
+                     {
+                         "key":  "nominationHackathonId",
+                         "value":  "3"
+                     },
+                     {
+                         "key":  "nomineeId",
+                         "value":  "9"
+                     },
+                     {
+                         "key":  "registrationHackathonId",
+                         "value":  "2"
+                     },
+                     {
+                         "key":  "lifecycleHackathonId",
+                         "value":  "4"
                      }
                  ],
+    "event":  [
+                  {
+                      "listen":  "test",
+                      "script":  {
+                                     "type":  "text/javascript",
+                                     "exec":  [
+                                                  "pm.test(\"Status code is successful\", function () {",
+                                                  "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                                                  "});"
+                                              ]
+                                 }
+                  }
+              ],
     "item":  [
                  {
                      "name":  "Guest",
@@ -74,7 +111,7 @@
                                                                                   ],
                                                                        "body":  {
                                                                                     "mode":  "raw",
-                                                                                    "raw":  "{\n  \"name\": \"Mario Rossi\",\n  \"email\": \"mario.rossi@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"TEAM_MEMBER\"\n}"
+                                                                                    "raw":  "{\n  \"name\": \"Mario Rossi\",\n  \"email\": \"mario.rossi@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"USER\"\n}"
                                                                                 },
                                                                        "url":  "{{baseUrl}}/api/users/register"
                                                                    }
@@ -84,9 +121,21 @@
                                   {
                                       "name":  "02 - Login",
                                       "item":  [
-                                                   {
-                                                       "name":  "Esegui login",
-                                                       "request":  {
+                                                           {
+                                                               "name":  "Esegui login",
+                                                               "event":  [
+                                                                             {
+                                                                                 "listen":  "test",
+                                                                                 "script":  {
+                                                                                                "exec":  [
+                                                                                                             "const user = pm.response.json();",
+                                                                                                             "pm.collectionVariables.set(\"userId\", user.userId);"
+                                                                                                         ],
+                                                                                                "type":  "text/javascript"
+                                                                                            }
+                                                                             }
+                                                                         ],
+                                                               "request":  {
                                                                        "method":  "POST",
                                                                        "header":  [
                                                                                       {
@@ -96,7 +145,7 @@
                                                                                   ],
                                                                        "body":  {
                                                                                     "mode":  "raw",
-                                                                                    "raw":  "{\n  \"email\": \"mario.rossi@example.com\",\n  \"password\": \"password123\"\n}"
+                                                                                    "raw":  "{\n  \"email\": \"giulia.bianchi@hackhub.local\",\n  \"password\": \"password123\"\n}"
                                                                                 },
                                                                        "url":  "{{baseUrl}}/api/users/login"
                                                                    }
@@ -107,7 +156,7 @@
                  },
                  {
                      "name":  "Utente",
-                     "description":  "Casi d\u0027uso comuni a ogni utente autenticato.",
+                     "description":  "Casi d\u0027uso comuni a ogni utente autenticato. Credenziali consigliate: giulia.bianchi@hackhub.local / password123.",
                      "item":  [
                                   {
                                       "name":  "08 - Gestione inviti ricevuti",
@@ -149,7 +198,7 @@
                                                                        "header":  [
 
                                                                                   ],
-                                                                       "url":  "{{baseUrl}}/api/users/{{userId}}/logout"
+                                                                       "url":  "{{baseUrl}}/api/users/logout"
                                                                    }
                                                    }
                                                ]
@@ -188,7 +237,7 @@
                  },
                  {
                      "name":  "Team Member",
-                     "description":  "Casi d\u0027uso del membro di un team.",
+                     "description":  "Eseguire ogni caso con il relativo attore, facendo login e logout separatamente: Giulia (giulia.bianchi@hackhub.local) crea il team; Marco (marco.rossi@hackhub.local, team 1) invita, iscrive, invia, aggiorna e chiede supporto; Anna (anna.verdi@hackhub.local) accetta l\u0027invito team. Password comune: password123.",
                      "item":  [
                                   {
                                       "name":  "04 - Crea team",
@@ -205,7 +254,7 @@
                                                                                   ],
                                                                        "body":  {
                                                                                     "mode":  "raw",
-                                                                                    "raw":  "{\n  \"name\": \"Byte Builders\"\n}"
+                                                                                    "raw":  "{\n  \"name\": \"Nova Team\"\n}"
                                                                                 },
                                                                        "url":  "{{baseUrl}}/api/teams"
                                                                    }
@@ -244,7 +293,7 @@
                                                                        "header":  [
 
                                                                                   ],
-                                                                       "url":  "{{baseUrl}}/api/hackathons/{{hackathonId}}/teams/{{teamId}}"
+                                                                       "url":  "{{baseUrl}}/api/hackathons/{{registrationHackathonId}}/teams/{{teamId}}"
                                                                    }
                                                    }
                                                ]
@@ -320,7 +369,7 @@
                                   },
                                   {
                                       "name":  "19 - Aggiorna sottomissione",
-                                      "description":  "Eseguire mentre la sottomissione Ã¨ ancora in stato DRAFT.",
+                                      "description":  "Usa la bozza seed draftSubmissionId, ancora in stato DRAFT.",
                                       "item":  [
                                                    {
                                                        "name":  "Aggiorna bozza",
@@ -336,7 +385,7 @@
                                                                                     "mode":  "raw",
                                                                                     "raw":  "{\n  \"title\": \"EcoTrack 2.0\",\n  \"description\": \"Versione aggiornata della piattaforma\",\n  \"repositoryUrl\": \"https://github.com/example/ecotrack\"\n}"
                                                                                 },
-                                                                       "url":  "{{baseUrl}}/api/submissions/{{submissionId}}"
+                                                                       "url":  "{{baseUrl}}/api/submissions/{{draftSubmissionId}}"
                                                                    }
                                                    }
                                                ]
@@ -345,11 +394,11 @@
                  },
                  {
                      "name":  "Mentor",
-                     "description":  "Casi d\u0027uso del mentore.",
+                     "description":  "Eseguire con sessioni separate: Marta Ricci (marta.ricci@hackhub.local) accetta mentorInvitationId e diventa mentor dell\u0027hackathon 2; Elena Conti (elena.conti@hackhub.local) è già mentor dell\u0027hackathon 1 e del team 1 per gli altri casi. Password: password123.",
                      "item":  [
                                   {
                                       "name":  "10 - Accetta invito mentore",
-                                      "description":  "Richiede l\u0027ID di un invito MENTOR giÃ  presente nel database.",
+                                      "description":  "Usa l\u0027invito MENTOR seed destinato a Marta Ricci.",
                                       "item":  [
                                                    {
                                                        "name":  "Accetta invito mentore",
@@ -393,7 +442,7 @@
                                                                                   ],
                                                                        "body":  {
                                                                                     "mode":  "raw",
-                                                                                    "raw":  "{\n  \"response\": \"Verificare le variabili d\u0027ambiente del deploy\",\n  \"state\": \"RESOLVED\"\n}"
+                                                                                    "raw":  "{\n  \"response\": \"Verificare le variabili d\u0027ambiente del deploy\",\n  \"state\": \"Resolved\"\n}"
                                                                                 },
                                                                        "url":  "{{baseUrl}}/api/support-requests/{{supportRequestId}}"
                                                                    }
@@ -458,11 +507,11 @@
                  },
                  {
                      "name":  "Judge",
-                     "description":  "Casi d\u0027uso del giudice.",
+                     "description":  "Eseguire con sessioni separate: Paolo Greco (paolo.greco@hackhub.local) accetta judgeInvitationId e diventa judge dell\u0027hackathon 2; Luca Ferrari (luca.ferrari@hackhub.local) è già judge dell\u0027hackathon 1 e valuta evaluationSubmissionId. Password: password123.",
                      "item":  [
                                   {
                                       "name":  "11 - Accetta invito giudice",
-                                      "description":  "Richiede l\u0027ID di un invito JUDGE giÃ  presente nel database.",
+                                      "description":  "Usa l\u0027invito JUDGE seed destinato a Paolo Greco.",
                                       "item":  [
                                                    {
                                                        "name":  "Accetta invito giudice",
@@ -493,7 +542,7 @@
                                                                                     "mode":  "raw",
                                                                                     "raw":  "{\n  \"judgeId\": {{judgeId}},\n  \"score\": 8.5,\n  \"comment\": \"Progetto completo e ben documentato\"\n}"
                                                                                 },
-                                                                       "url":  "{{baseUrl}}/api/submissions/{{submissionId}}/evaluation"
+                                                                       "url":  "{{baseUrl}}/api/submissions/{{evaluationSubmissionId}}/evaluation"
                                                                    }
                                                    }
                                                ]
@@ -502,7 +551,7 @@
                  },
                  {
                      "name":  "Organizer",
-                     "description":  "Casi d\u0027uso dell\u0027organizzatore.",
+                     "description":  "Eseguire come Sofia Romano (sofia.romano@hackhub.local / password123). È organizer di tutti gli hackathon seed. lifecycleHackathonId è già in valutazione e ha tutte le submission valutate: eseguire proclama, pubblica ed eroga in quest\u0027ordine.",
                      "item":  [
                                   {
                                       "name":  "03 - Crea nuovo hackathon",
@@ -536,7 +585,7 @@
                                                                        "header":  [
 
                                                                                   ],
-                                                                       "url":  "{{baseUrl}}/api/hackathons/{{hackathonId}}/winner/{{teamId}}"
+                                                                       "url":  "{{baseUrl}}/api/hackathons/{{lifecycleHackathonId}}/winner/{{teamId}}"
                                                                    }
                                                    }
                                                ]
@@ -551,7 +600,7 @@
                                                                        "header":  [
 
                                                                                   ],
-                                                                       "url":  "{{baseUrl}}/api/hackathons/{{hackathonId}}/leaderboard/publish"
+                                                                       "url":  "{{baseUrl}}/api/hackathons/{{lifecycleHackathonId}}/leaderboard/publish"
                                                                    }
                                                    }
                                                ]
@@ -606,7 +655,7 @@
                                                                        "header":  [
 
                                                                                   ],
-                                                                       "url":  "{{baseUrl}}/api/hackathons/{{hackathonId}}/judges/{{judgeId}}"
+                                                                       "url":  "{{baseUrl}}/api/hackathons/{{nominationHackathonId}}/judges/{{nomineeId}}"
                                                                    }
                                                    }
                                                ]
@@ -621,7 +670,7 @@
                                                                        "header":  [
 
                                                                                   ],
-                                                                       "url":  "{{baseUrl}}/api/hackathons/{{hackathonId}}/prize"
+                                                                       "url":  "{{baseUrl}}/api/hackathons/{{lifecycleHackathonId}}/prize"
                                                                    }
                                                    }
                                                ]
@@ -630,7 +679,7 @@
                  },
                  {
                      "name":  "Staff Member",
-                     "description":  "Caso d\u0027uso condiviso da Mentor, Judge e Organizer.",
+                     "description":  "Caso d\u0027uso dello StaffMember. Credenziali consigliate: carlo.blu@hackhub.local / password123.",
                      "item":  [
                                   {
                                       "name":  "24 - Visualizza sottomissioni",

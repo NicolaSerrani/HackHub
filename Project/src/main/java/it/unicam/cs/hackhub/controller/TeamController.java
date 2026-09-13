@@ -40,11 +40,6 @@ public class TeamController {
         return teamService.inviteUsers(teamId, request.userIds());
     }
 
-    @GetMapping("/registered/{hackathonId}")
-    public List<Team> viewRegisteredTeams(@PathVariable Long hackathonId) {
-        return teamService.viewRegisteredTeams(hackathonId);
-    }
-
     @PostMapping("/{teamId}/violations")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void reportViolation(@PathVariable Long teamId, @RequestBody ViolationRequest request) {

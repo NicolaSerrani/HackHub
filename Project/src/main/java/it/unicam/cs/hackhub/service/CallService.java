@@ -2,10 +2,11 @@ package it.unicam.cs.hackhub.service;
 
 import it.unicam.cs.hackhub.integration.calendar.Calendar;
 import it.unicam.cs.hackhub.model.entity.Call;
-import it.unicam.cs.hackhub.model.entity.Mentor;
 import it.unicam.cs.hackhub.model.entity.Team;
+import it.unicam.cs.hackhub.model.entity.Mentor;
 import it.unicam.cs.hackhub.model.entity.TeamMember;
 import it.unicam.cs.hackhub.repository.CallRepository;
+import it.unicam.cs.hackhub.repository.HackathonRepository;
 import it.unicam.cs.hackhub.repository.TeamRepository;
 import it.unicam.cs.hackhub.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -23,18 +24,21 @@ public class CallService {
     private final UserRepository userRepository;
     private final TeamRepository teamRepository;
     private final UserService userService;
+    private final HackathonRepository hackathonRepository;
 
     public CallService(Calendar calendar, CallRepository callRepository,
-                       UserRepository userRepository, TeamRepository teamRepository, UserService userService) {
+                       UserRepository userRepository, TeamRepository teamRepository, UserService userService,
+                       HackathonRepository hackathonRepository) {
         this.calendar = calendar;
         this.callRepository = callRepository;
         this.userRepository = userRepository;
         this.teamRepository = teamRepository;
         this.userService = userService;
+        this.hackathonRepository = hackathonRepository;
     }
 
     public Call proposeCall(Long mentorId, Long teamId, LocalDateTime dateTime, Duration duration) {
-        Mentor mentor = userService.requireRole(Mentor.class);
+        Mentor mentor = userService.requireMentor();
         if (!mentor.getUserId().equals(mentorId)) {
             throw new IllegalStateException("A mentor can propose calls only as themselves.");
         }
@@ -44,7 +48,17 @@ public class CallService {
     }
 
     public Call proposeCall(Mentor mentor, Team team, LocalDateTime dateTime, Duration duration) {
-        Call call = mentor.proposeCall(team, dateTime, duration);
+        if (team.getSupportMentor() == null || !team.getSupportMentor().getUserId().equals(mentor.getUserId())) {
+            throw new IllegalStateException("Only the team's mentor can propose a call.");
+        }
+        Call call = new Call();
+        call.setMentor(mentor);
+        call.setTeam(team);
+        call.setDateTime(dateTime);
+        call.setDuration(duration);
+        if (!call.validate()) {
+            throw new IllegalArgumentException("Invalid call data.");
+        }
         callRepository.saveAndFlush(call);
         call.schedule(calendar.registerCall(call));
         return callRepository.save(call);
@@ -52,7 +66,7 @@ public class CallService {
 
     public Call confirmCall(Long callId) {
         Call call = findCall(callId);
-        TeamMember member = userService.requireRole(TeamMember.class);
+        TeamMember member = userService.requireTeamMember();
         if (!member.getTeam().getTeamId().equals(call.getTeam().getTeamId())) {
             throw new IllegalStateException("Only a member of the team can confirm this call.");
         }
@@ -62,7 +76,7 @@ public class CallService {
 
     public Call cancelCall(Long callId) {
         Call call = findCall(callId);
-        Mentor mentor = userService.requireRole(Mentor.class);
+        Mentor mentor = userService.requireMentor();
         if (!mentor.getUserId().equals(call.getMentor().getUserId())) {
             throw new IllegalStateException("Only the proposing mentor can cancel this call.");
         }
@@ -72,7 +86,7 @@ public class CallService {
 
     @Transactional(readOnly = true)
     public List<Call> viewTeamCalls(Long teamId) {
-        TeamMember member = userService.requireRole(TeamMember.class);
+        TeamMember member = userService.requireTeamMember();
         if (!member.getTeam().getTeamId().equals(teamId)) {
             throw new IllegalStateException("A team member can view only their team's calls.");
         }
@@ -93,7 +107,10 @@ public class CallService {
     }
 
     public List<LocalDateTime> viewAvailableTimeSlots() {
-        userService.requireRole(Mentor.class);
+        Mentor mentor = userService.requireMentor();
+        if (hackathonRepository.findAll().stream().noneMatch(h -> h.getMentors().contains(mentor))) {
+            throw new IllegalStateException("This operation requires a mentor assigned to an hackathon");
+        }
         return calendar.getAvailableTimeSlots();
     }
 }

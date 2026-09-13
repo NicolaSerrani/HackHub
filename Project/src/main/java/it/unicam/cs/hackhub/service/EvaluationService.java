@@ -1,8 +1,9 @@
 package it.unicam.cs.hackhub.service;
 
 import it.unicam.cs.hackhub.model.entity.Evaluation;
-import it.unicam.cs.hackhub.model.entity.Judge;
 import it.unicam.cs.hackhub.model.entity.Submission;
+import it.unicam.cs.hackhub.model.entity.Judge;
+import it.unicam.cs.hackhub.model.enumeration.SubmissionState;
 import it.unicam.cs.hackhub.repository.EvaluationRepository;
 import it.unicam.cs.hackhub.repository.SubmissionRepository;
 import it.unicam.cs.hackhub.repository.UserRepository;
@@ -27,7 +28,7 @@ public class EvaluationService {
     public Evaluation evaluateSubmission(Long submissionId, Long judgeId, double score, String comment) {
         Submission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new IllegalArgumentException("Submission not found: " + submissionId));
-        Judge judge = userService.requireRole(Judge.class);
+        Judge judge = userService.requireJudge();
         if (!judge.getUserId().equals(judgeId)) {
             throw new IllegalStateException("A judge can evaluate only as themselves.");
         }
@@ -41,8 +42,13 @@ public class EvaluationService {
         if (evaluationRepository.findBySubmission_SubmissionId(submissionId).isPresent()) {
             throw new IllegalStateException("Submission has already been evaluated");
         }
+        if (submission.getState() != SubmissionState.SUBMITTED) {
+            throw new IllegalStateException("Only submitted projects can be evaluated.");
+        }
+        if (score < 0 || score > 10) {
+            throw new IllegalArgumentException("Score must be between 0 and 10.");
+        }
         Evaluation evaluation = judge.evaluateSubmission(submission, score, comment);
-        submissionRepository.save(submission);
         return evaluationRepository.save(evaluation);
     }
 }

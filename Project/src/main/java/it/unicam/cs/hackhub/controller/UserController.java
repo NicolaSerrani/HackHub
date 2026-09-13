@@ -31,10 +31,10 @@ public class UserController {
         return userService.login(request.email(), request.password());
     }
 
-    @PostMapping("/{userId}/logout")
+    @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void logout(@PathVariable Long userId) {
-        userService.logout(userId);
+    public void logout() {
+        userService.logout();
     }
 
     @GetMapping("/{userId}")

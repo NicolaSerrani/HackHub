@@ -1,10 +1,11 @@
 package it.unicam.cs.hackhub.controller;
 
 import it.unicam.cs.hackhub.model.entity.Hackathon;
-import it.unicam.cs.hackhub.model.entity.Mentor;
+import it.unicam.cs.hackhub.model.entity.Invitation;
 import it.unicam.cs.hackhub.model.entity.Payment;
 import it.unicam.cs.hackhub.model.entity.Registration;
 import it.unicam.cs.hackhub.model.entity.Team;
+import it.unicam.cs.hackhub.model.entity.Mentor;
 import it.unicam.cs.hackhub.model.enumeration.HackathonState;
 import it.unicam.cs.hackhub.pattern.builder.HackathonBuilder;
 import it.unicam.cs.hackhub.service.HackathonService;
@@ -48,7 +49,7 @@ public class HackathonController {
     }
 
     @PostMapping("/{hackathonId}/mentors/{mentorId}")
-    public Hackathon addMentor(@PathVariable Long hackathonId, @PathVariable Long mentorId) {
+    public Invitation addMentor(@PathVariable Long hackathonId, @PathVariable Long mentorId) {
         return hackathonService.addMentor(hackathonId, mentorId);
     }
 
@@ -58,7 +59,7 @@ public class HackathonController {
     }
 
     @PostMapping("/{hackathonId}/judges/{judgeId}")
-    public Hackathon addJudge(@PathVariable Long hackathonId, @PathVariable Long judgeId) {
+    public Invitation addJudge(@PathVariable Long hackathonId, @PathVariable Long judgeId) {
         return hackathonService.addJudge(hackathonId, judgeId);
     }
 

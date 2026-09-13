@@ -1,11 +1,8 @@
 package it.unicam.cs.hackhub.service;
 
-import it.unicam.cs.hackhub.model.entity.Judge;
-import it.unicam.cs.hackhub.model.entity.Mentor;
-import it.unicam.cs.hackhub.model.entity.Organizer;
-import it.unicam.cs.hackhub.model.entity.TeamMember;
-import it.unicam.cs.hackhub.model.entity.User;
+import it.unicam.cs.hackhub.model.entity.*;
 import it.unicam.cs.hackhub.repository.UserRepository;
+import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,11 +12,13 @@ import java.util.Locale;
 @Transactional
 public class UserService {
     private final UserRepository userRepository;
+    private final EntityManager entityManager;
     // ponytail: one global session; use per-client Spring Security sessions when multiple clients are required.
     private Long loggedInUserId;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, EntityManager entityManager) {
         this.userRepository = userRepository;
+        this.entityManager = entityManager;
     }
 
     public User register(String name, String email, String password) {
@@ -36,15 +35,11 @@ public class UserService {
         if (userRepository.existsByEmailIgnoreCase(email)) {
             throw new IllegalStateException("Email is already registered");
         }
-        String normalizedRole = role == null ? "USER" : role.trim().toUpperCase(Locale.ROOT);
-        User user = switch (normalizedRole) {
-            case "USER" -> new User();
-            case "TEAM_MEMBER" -> new TeamMember();
-            case "MENTOR" -> new Mentor();
-            case "JUDGE" -> new Judge();
-            case "ORGANIZER" -> new Organizer();
-            default -> throw new IllegalArgumentException("Unsupported role: " + role);
-        };
+        String accountRole = (role == null ? "USER" : role).trim().toUpperCase(Locale.ROOT);
+        if (!accountRole.equals("USER") && !accountRole.equals("STAFF")) {
+            throw new IllegalArgumentException("Role must be USER or STAFF");
+        }
+        User user = accountRole.equals("STAFF") ? new StaffMember() : new User();
         user.setName(name.trim());
         user.setEmail(email.trim().toLowerCase(Locale.ROOT));
         user.setPassword(password);
@@ -73,6 +68,13 @@ public class UserService {
         loggedInUserId = null;
     }
 
+    public synchronized void logout() {
+        if (loggedInUserId == null) {
+            throw new IllegalStateException("Login is required.");
+        }
+        logout(loggedInUserId);
+    }
+
     public synchronized User requireAuthenticated() {
         if (loggedInUserId == null) {
             throw new IllegalStateException("Login is required.");
@@ -80,12 +82,80 @@ public class UserService {
         return findUser(loggedInUserId);
     }
 
-    public synchronized <T extends User> T requireRole(Class<T> role) {
+    public synchronized StaffMember requireStaffMember() {
         User user = requireAuthenticated();
-        if (!role.isInstance(user)) {
-            throw new IllegalStateException("This operation requires role: " + role.getSimpleName());
+        if (!(user instanceof StaffMember staff)) {
+            throw new IllegalStateException("This operation requires a staff member.");
         }
-        return role.cast(user);
+        return staff;
+    }
+
+    public synchronized TeamMember requireTeamMember() {
+        User user = requireAuthenticated();
+        if (!(user instanceof TeamMember member) || !member.hasTeam()) {
+            throw new IllegalStateException("This operation requires membership in a team.");
+        }
+        return member;
+    }
+
+    public synchronized Mentor requireMentor() {
+        User user = requireAuthenticated();
+        if (!(user instanceof Mentor mentor)) throw new IllegalStateException("This operation requires a mentor.");
+        return mentor;
+    }
+
+    public synchronized Judge requireJudge() {
+        User user = requireAuthenticated();
+        if (!(user instanceof Judge judge)) throw new IllegalStateException("This operation requires a judge.");
+        return judge;
+    }
+
+    public synchronized Organizer requireOrganizer() {
+        User user = requireAuthenticated();
+        if (!(user instanceof Organizer organizer)) {
+            throw new IllegalStateException("This operation requires an organizer.");
+        }
+        return organizer;
+    }
+
+    public synchronized TeamMember acquireTeamMember() {
+        User user = requireAuthenticated();
+        if (user instanceof TeamMember member) return member;
+        if (user instanceof StaffMember) throw new IllegalStateException("Only a user can become a team member.");
+        return promote(user, "TEAM_MEMBER", TeamMember.class);
+    }
+
+    public synchronized Mentor acquireMentor() {
+        User user = requireStaffMember();
+        if (user instanceof Mentor mentor) return mentor;
+        return promoteStaff(user, "MENTOR", Mentor.class);
+    }
+
+    public synchronized Judge acquireJudge() {
+        User user = requireStaffMember();
+        if (user instanceof Judge judge) return judge;
+        return promoteStaff(user, "JUDGE", Judge.class);
+    }
+
+    public synchronized Organizer acquireOrganizer() {
+        User user = requireStaffMember();
+        if (user instanceof Organizer organizer) return organizer;
+        return promoteStaff(user, "ORGANIZER", Organizer.class);
+    }
+
+    private <T extends StaffMember> T promoteStaff(User user, String type, Class<T> target) {
+        if (user.getClass() != StaffMember.class) {
+            throw new IllegalStateException("The staff member already has a different contextual role.");
+        }
+        return promote(user, type, target);
+    }
+
+    private <T extends User> T promote(User user, String type, Class<T> target) {
+        entityManager.flush();
+        entityManager.createNativeQuery("update users set user_type = :type where user_id = :id")
+                .setParameter("type", type).setParameter("id", user.getUserId()).executeUpdate();
+        entityManager.clear();
+        return target.cast(findUser(user.getUserId()));
     }
 
     public synchronized void requireCurrentUser(Long userId) {

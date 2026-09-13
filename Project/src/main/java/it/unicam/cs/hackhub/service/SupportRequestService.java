@@ -1,9 +1,9 @@
 package it.unicam.cs.hackhub.service;
 
 import it.unicam.cs.hackhub.model.entity.Hackathon;
-import it.unicam.cs.hackhub.model.entity.Mentor;
 import it.unicam.cs.hackhub.model.entity.SupportRequest;
 import it.unicam.cs.hackhub.model.entity.Team;
+import it.unicam.cs.hackhub.model.entity.Mentor;
 import it.unicam.cs.hackhub.model.entity.TeamMember;
 import it.unicam.cs.hackhub.model.enumeration.HackathonState;
 import it.unicam.cs.hackhub.model.enumeration.SupportRequestState;
@@ -40,10 +40,15 @@ public class SupportRequestService {
         requireOwnTeam(teamId);
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new IllegalArgumentException("Team not found: " + teamId));
-        Mentor mentor = userRepository.findById(mentorId).filter(Mentor.class::isInstance).map(Mentor.class::cast)
+        Mentor mentor = userRepository.findById(mentorId)
+                .filter(Mentor.class::isInstance).map(Mentor.class::cast)
                 .orElseThrow(() -> new IllegalArgumentException("Mentor not found: " + mentorId));
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
                 .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        if (team.getSupportMentor() == null || !team.getSupportMentor().getUserId().equals(mentorId)
+                || !hackathon.getMentors().contains(mentor)) {
+            throw new IllegalStateException("The staff member is not the team's mentor for this hackathon");
+        }
         SupportRequest request = new SupportRequest();
         request.setTeam(team);
         request.setMentor(mentor);
@@ -67,7 +72,7 @@ public class SupportRequestService {
 
     @Transactional(readOnly = true)
     public List<SupportRequest> viewSupportRequests(Long mentorId) {
-        Mentor mentor = userService.requireRole(Mentor.class);
+        Mentor mentor = userService.requireMentor();
         if (!mentor.getUserId().equals(mentorId)) {
             throw new IllegalStateException("A mentor can view only their support requests.");
         }
@@ -76,12 +81,17 @@ public class SupportRequestService {
 
     @Transactional(readOnly = true)
     public List<SupportRequest> viewHackathonSupportRequests(Long hackathonId) {
-        userService.requireRole(Mentor.class);
+        Mentor mentor = userService.requireMentor();
+        Hackathon hackathon = hackathonRepository.findById(hackathonId)
+                .orElseThrow(() -> new IllegalArgumentException("Hackathon not found: " + hackathonId));
+        if (!hackathon.getMentors().contains(mentor)) {
+            throw new IllegalStateException("This operation requires a mentor assigned to the hackathon");
+        }
         return supportRequestRepository.findByHackathon_HackathonId(hackathonId);
     }
 
     public SupportRequest manageSupportRequest(Long requestId, String response, SupportRequestState state) {
-        Mentor mentor = userService.requireRole(Mentor.class);
+        Mentor mentor = userService.requireMentor();
         SupportRequest request = supportRequestRepository.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException("Support request not found: " + requestId));
         if (!mentor.getUserId().equals(request.getMentor().getUserId())) {
@@ -101,7 +111,7 @@ public class SupportRequestService {
     }
 
     private TeamMember requireOwnTeam(Long teamId) {
-        TeamMember member = userService.requireRole(TeamMember.class);
+        TeamMember member = userService.requireTeamMember();
         if (!member.getTeam().getTeamId().equals(teamId)) {
             throw new IllegalStateException("A team member can request support only for their own team.");
         }

@@ -57,6 +57,10 @@ public class Hackathon {
     @JoinColumn(name = "judge_id")
     private Judge judge;
     @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "organizer_id", nullable = false)
+    private Organizer organizer;
+    @JsonIgnore
     @ManyToMany
     @JoinTable(name = "hackathon_mentors",
             joinColumns = @JoinColumn(name = "hackathon_id"),
@@ -196,6 +200,7 @@ public class Hackathon {
         this.payment = prizePayment;
         return prizePayment;
     }
+    @JsonIgnore
     public List<Team> getLeaderboard() {
         if (winner == null) {
             return Collections.emptyList();
@@ -302,6 +307,14 @@ public class Hackathon {
 
     public Judge getJudge() {
         return judge;
+    }
+
+    public Organizer getOrganizer() {
+        return organizer;
+    }
+
+    public void setOrganizer(Organizer organizer) {
+        this.organizer = organizer;
     }
 
     public List<Mentor> getMentors() {

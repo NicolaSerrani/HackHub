@@ -1,10 +1,8 @@
 package it.unicam.cs.hackhub.service;
 
-import it.unicam.cs.hackhub.model.entity.Invitation;
-import it.unicam.cs.hackhub.model.entity.Judge;
-import it.unicam.cs.hackhub.model.entity.Mentor;
-import it.unicam.cs.hackhub.model.entity.TeamMember;
+import it.unicam.cs.hackhub.model.entity.*;
 import it.unicam.cs.hackhub.model.enumeration.InvitationType;
+import it.unicam.cs.hackhub.repository.HackathonRepository;
 import it.unicam.cs.hackhub.repository.InvitationRepository;
 import it.unicam.cs.hackhub.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -15,70 +13,78 @@ import java.util.List;
 @Service
 @Transactional
 public class InvitationService {
-    private final InvitationRepository invitationRepository;
-    private final UserRepository userRepository;
+    private final InvitationRepository invitations;
+    private final UserRepository users;
+    private final HackathonRepository hackathons;
     private final UserService userService;
 
-    public InvitationService(InvitationRepository invitationRepository, UserRepository userRepository,
-                             UserService userService) {
-        this.invitationRepository = invitationRepository;
-        this.userRepository = userRepository;
+    public InvitationService(InvitationRepository invitations, UserRepository users,
+                             HackathonRepository hackathons, UserService userService) {
+        this.invitations = invitations;
+        this.users = users;
+        this.hackathons = hackathons;
         this.userService = userService;
     }
 
     @Transactional(readOnly = true)
     public List<Invitation> viewReceivedInvitations(Long userId) {
         userService.requireCurrentUser(userId);
-        return invitationRepository.findByReceiver_UserId(userId);
+        return invitations.findByReceiver_UserId(userId);
     }
 
     public Invitation acceptTeamInvitation(Long invitationId) {
-        TeamMember member = userService.requireRole(TeamMember.class);
-        Invitation invitation = findInvitation(invitationId, InvitationType.TEAM);
-        requireReceiver(invitation, member.getUserId());
-        if (member.hasTeam()) {
-            throw new IllegalStateException("A team member already belongs to a team.");
+        User user = userService.requireAuthenticated();
+        Invitation invitation = requireInvitation(invitationId, InvitationType.TEAM, user);
+        if (user instanceof StaffMember || user.hasTeam()) {
+            throw new IllegalStateException("The user already belongs to a team or is a staff member.");
         }
-        if (invitation.getTeam() == null) {
-            throw new IllegalStateException("Invitation is not associated with a team");
-        }
-        member.acceptInvitation(invitation);
+        if (invitation.getTeam() == null) throw new IllegalStateException("Invitation has no team");
+        TeamMember member = userService.acquireTeamMember();
+        invitation = requireInvitation(invitationId, InvitationType.TEAM, member);
+        invitation.accept();
         invitation.getTeam().addMember(member);
-        userRepository.save(member);
-        return invitationRepository.save(invitation);
+        users.save(member);
+        return invitations.save(invitation);
     }
 
     public Invitation acceptMentorInvitation(Long invitationId) {
-        Mentor mentor = userService.requireRole(Mentor.class);
-        Invitation invitation = findInvitation(invitationId, InvitationType.MENTOR);
-        requireReceiver(invitation, mentor.getUserId());
-        return accept(invitation);
+        StaffMember staff = userService.requireStaffMember();
+        Invitation invitation = requireInvitation(invitationId, InvitationType.MENTOR, staff);
+        Long hackathonId = requireHackathon(invitation).getHackathonId();
+        Mentor mentor = userService.acquireMentor();
+        invitation = requireInvitation(invitationId, InvitationType.MENTOR, mentor);
+        Hackathon hackathon = hackathons.findById(hackathonId).orElseThrow();
+        invitation.accept();
+        hackathon.addMentor(mentor);
+        hackathons.save(hackathon);
+        return invitations.save(invitation);
     }
 
     public Invitation acceptJudgeInvitation(Long invitationId) {
-        Judge judge = userService.requireRole(Judge.class);
-        Invitation invitation = findInvitation(invitationId, InvitationType.JUDGE);
-        requireReceiver(invitation, judge.getUserId());
-        return accept(invitation);
+        StaffMember staff = userService.requireStaffMember();
+        Invitation invitation = requireInvitation(invitationId, InvitationType.JUDGE, staff);
+        Long hackathonId = requireHackathon(invitation).getHackathonId();
+        Judge judge = userService.acquireJudge();
+        invitation = requireInvitation(invitationId, InvitationType.JUDGE, judge);
+        Hackathon hackathon = hackathons.findById(hackathonId).orElseThrow();
+        if (hackathon.getJudge() != null) throw new IllegalStateException("A judge is already assigned");
+        invitation.accept();
+        hackathon.setJudge(judge);
+        hackathons.save(hackathon);
+        return invitations.save(invitation);
     }
 
-    private Invitation accept(Invitation invitation) {
-        invitation.getReceiver().acceptInvitation(invitation);
-        return invitationRepository.save(invitation);
-    }
-
-    private Invitation findInvitation(Long invitationId, InvitationType type) {
-        Invitation invitation = invitationRepository.findByInvitationIdAndType(invitationId, type)
+    private Invitation requireInvitation(Long id, InvitationType type, User receiver) {
+        Invitation invitation = invitations.findByInvitationIdAndType(id, type)
                 .orElseThrow(() -> new IllegalArgumentException("Invitation not found or of the wrong type"));
-        if (!invitation.isPending()) {
-            throw new IllegalStateException("Invitation has already been processed");
-        }
+        if (!invitation.isPending()) throw new IllegalStateException("Invitation has already been processed");
+        if (!invitation.getReceiver().getUserId().equals(receiver.getUserId()))
+            throw new IllegalStateException("Only the invitation recipient can accept it.");
         return invitation;
     }
 
-    private void requireReceiver(Invitation invitation, Long userId) {
-        if (!invitation.getReceiver().getUserId().equals(userId)) {
-            throw new IllegalStateException("Only the invitation recipient can accept it.");
-        }
+    private Hackathon requireHackathon(Invitation invitation) {
+        if (invitation.getHackathon() == null) throw new IllegalStateException("Invitation has no hackathon");
+        return invitation.getHackathon();
     }
 }

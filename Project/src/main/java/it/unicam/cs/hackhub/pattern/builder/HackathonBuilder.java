@@ -1,8 +1,6 @@
 package it.unicam.cs.hackhub.pattern.builder;
 
 import it.unicam.cs.hackhub.model.entity.Hackathon;
-import it.unicam.cs.hackhub.model.entity.Judge;
-import it.unicam.cs.hackhub.model.entity.Mentor;
 
 import java.time.LocalDate;
 
@@ -51,16 +49,6 @@ public class HackathonBuilder {
 
     public HackathonBuilder setMaxTeamMembers(int maxTeamMembers) {
         hackathon.setMaxTeamMembers(maxTeamMembers);
-        return this;
-    }
-
-    public HackathonBuilder setJudge(Judge judge) {
-        hackathon.setJudge(judge);
-        return this;
-    }
-
-    public HackathonBuilder addMentor(Mentor mentor) {
-        hackathon.addMentor(mentor);
         return this;
     }
 

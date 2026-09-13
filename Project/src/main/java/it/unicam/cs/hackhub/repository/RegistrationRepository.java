@@ -9,6 +9,7 @@ import java.util.List;
 
 public interface RegistrationRepository extends JpaRepository<Registration, Long> {
     List<Registration> findByHackathon_HackathonId(Long hackathonId);
+    List<Registration> findByTeam_TeamId(Long teamId);
     boolean existsByHackathon_HackathonIdAndTeam_TeamId(Long hackathonId, Long teamId);
 
     @Query("select r.team from Registration r where r.hackathon.hackathonId = :hackathonId and r.state = it.unicam.cs.hackhub.model.enumeration.RegistrationState.ACTIVE")
