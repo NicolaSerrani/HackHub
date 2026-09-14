@@ -1,6 +1,5 @@
 package it.unicam.cs.hackhub.controller;
 
-import it.unicam.cs.hackhub.model.entity.Invitation;
 import it.unicam.cs.hackhub.service.InvitationService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,22 +19,22 @@ public class InvitationController {
     }
 
     @GetMapping("/received/{userId}")
-    public List<Invitation> viewReceivedInvitations(@PathVariable Long userId) {
-        return invitationService.viewReceivedInvitations(userId);
+    public List<InvitationService.InvitationDetails> viewReceivedInvitations(@PathVariable("userId") Long userId) {
+        return invitationService.viewReceivedInvitationDetails(userId);
     }
 
     @PostMapping("/{invitationId}/accept/team")
-    public Invitation acceptTeamInvitation(@PathVariable Long invitationId) {
+    public it.unicam.cs.hackhub.model.entity.Invitation acceptTeamInvitation(@PathVariable("invitationId") Long invitationId) {
         return invitationService.acceptTeamInvitation(invitationId);
     }
 
     @PostMapping("/{invitationId}/accept/mentor")
-    public Invitation acceptMentorInvitation(@PathVariable Long invitationId) {
+    public it.unicam.cs.hackhub.model.entity.Invitation acceptMentorInvitation(@PathVariable("invitationId") Long invitationId) {
         return invitationService.acceptMentorInvitation(invitationId);
     }
 
     @PostMapping("/{invitationId}/accept/judge")
-    public Invitation acceptJudgeInvitation(@PathVariable Long invitationId) {
+    public it.unicam.cs.hackhub.model.entity.Invitation acceptJudgeInvitation(@PathVariable("invitationId") Long invitationId) {
         return invitationService.acceptJudgeInvitation(invitationId);
     }
 }

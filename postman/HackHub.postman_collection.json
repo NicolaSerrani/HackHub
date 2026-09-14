@@ -57,12 +57,12 @@
                          "key":  "judgeInvitationId",
                          "value":  "5"
                      },
-                     {
-                         "key":  "supportRequestId",
-                         "value":  "1"
-                     },
-                     {
-                         "key":  "nominationHackathonId",
+                {
+                    "key":  "supportRequestId",
+                    "value":  "1"
+                },
+                {
+                    "key":  "nominationHackathonId",
                          "value":  "3"
                      },
                      {
@@ -75,6 +75,10 @@
                      },
                      {
                          "key":  "lifecycleHackathonId",
+                         "value":  "5"
+                     },
+                     {
+                         "key":  "finalLeaderboardHackathonId",
                          "value":  "4"
                      }
                  ],
@@ -195,7 +199,7 @@
                                                                        "header":  [
 
                                                                                   ],
-                                                                       "url":  "{{baseUrl}}/api/hackathons/{{lifecycleHackathonId}}/leaderboard"
+                                                                       "url":  "{{baseUrl}}/api/hackathons/{{finalLeaderboardHackathonId}}/leaderboard"
                                                                    }
                                                    }
                                                ]
@@ -314,9 +318,16 @@
                                                        "request":  {
                                                                        "method":  "POST",
                                                                        "header":  [
-
+                                                                                      {
+                                                                                          "key":  "Content-Type",
+                                                                                          "value":  "application/json"
+                                                                                      }
                                                                                   ],
-                                                                       "url":  "{{baseUrl}}/api/hackathons/{{registrationHackathonId}}/teams/{{teamId}}"
+                                                                       "body":  {
+                                                                                    "mode":  "raw",
+                                                                                    "raw":  "{\n  \"hackathonName\": \"Future Tech Challenge\"\n}"
+                                                                                },
+                                                                       "url":  "{{baseUrl}}/api/hackathons/teams/{{teamId}}"
                                                                    }
                                                    }
                                                ]
@@ -412,11 +423,11 @@
                                                                    }
                                                    }
                                                ]
-                                  }
-                              ]
-                 },
-                 {
-                     "name":  "Mentor",
+                                                  }
+                                               ]
+                                  },
+                                 {
+                                     "name":  "Mentor",
                      "description":  "Eseguire con sessioni separate: Marta Ricci (marta.ricci@hackhub.local) accetta mentorInvitationId e diventa mentor dell\u0027hackathon 2; Elena Conti (elena.conti@hackhub.local) è già mentor dell\u0027hackathon 1 e del team 1 per gli altri casi. Password: password123.",
                      "item":  [
                                   {
@@ -574,7 +585,7 @@
                  },
                  {
                      "name":  "Organizer",
-                     "description":  "Eseguire come Sofia Romano (sofia.romano@hackhub.local / password123). È organizer di tutti gli hackathon seed. lifecycleHackathonId è già in valutazione e ha tutte le submission valutate: eseguire proclama, pubblica ed eroga in quest\u0027ordine.",
+                     "description":  "Eseguire come Sofia Romano (sofia.romano@hackhub.local / password123). lifecycleHackathonId (5, Evaluation Arena) è già in valutazione e ha tutte le submission valutate: eseguire proclama, pubblica ed eroga in quest\u0027ordine.",
                      "item":  [
                                   {
                                       "name":  "03 - Crea nuovo hackathon",
@@ -638,7 +649,7 @@
                                                                        "header":  [
 
                                                                                   ],
-                                                                       "url":  "{{baseUrl}}/api/hackathons/{{hackathonId}}/teams"
+                                                                       "url":  "{{baseUrl}}/api/hackathons/{{registrationHackathonId}}/teams"
                                                                    }
                                                    }
                                                ]

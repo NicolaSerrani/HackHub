@@ -54,6 +54,15 @@ public class HackathonService {
         return registrations.saveAndFlush(hackathon.getRegistrations().getLast());
     }
 
+    public Registration registerTeam(String hackathonName, Long teamId) {
+        if (hackathonName == null || hackathonName.isBlank()) {
+            throw new IllegalArgumentException("Hackathon name is required");
+        }
+        Hackathon hackathon = hackathons.findByNameIgnoreCase(hackathonName.trim())
+                .orElseThrow(() -> new IllegalArgumentException("Hackathon not found"));
+        return registerTeam(hackathon.getHackathonId(), teamId);
+    }
+
     public Invitation addMentor(Long hackathonId, Long mentorId) {
         return inviteStaff(findHackathon(hackathonId), mentorId, InvitationType.MENTOR);
     }

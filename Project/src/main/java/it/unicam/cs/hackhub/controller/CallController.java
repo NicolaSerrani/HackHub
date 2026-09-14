@@ -32,17 +32,17 @@ public class CallController {
     }
 
     @PostMapping("/{callId}/confirm")
-    public Call confirmCall(@PathVariable Long callId) {
+    public Call confirmCall(@PathVariable("callId") Long callId) {
         return callService.confirmCall(callId);
     }
 
     @PostMapping("/{callId}/cancel")
-    public Call cancelCall(@PathVariable Long callId) {
+    public Call cancelCall(@PathVariable("callId") Long callId) {
         return callService.cancelCall(callId);
     }
 
     @GetMapping("/team/{teamId}")
-    public List<Call> viewTeamCalls(@PathVariable Long teamId) {
+    public List<Call> viewTeamCalls(@PathVariable("teamId") Long teamId) {
         return callService.viewTeamCalls(teamId);
     }
 

@@ -58,6 +58,15 @@ public class SupportRequestService {
         return createSupportRequest(request);
     }
 
+    public SupportRequestDetails createSupportRequestWithDetails(Long teamId, Long mentorId, Long hackathonId,
+                                                                  String title, String description) {
+        SupportRequest request = createSupportRequest(teamId, mentorId, hackathonId, title, description);
+        return new SupportRequestDetails(request.getSupportRequestId(), request.getTitle(), request.getDescription(),
+                request.getState(), request.getCreatedAt(), request.getTeam().getName(),
+                request.getMentor().getUserId(), request.getMentor().getName(),
+                request.getHackathon().getHackathonId(), request.getHackathon().getName());
+    }
+
     public SupportRequest createSupportRequest(SupportRequest request) {
         if (request == null || !request.validate() || request.getMentor() == null
                 || request.getTeam() == null || request.getHackathon() == null) {
@@ -117,4 +126,9 @@ public class SupportRequestService {
         }
         return member;
     }
+
+    public record SupportRequestDetails(Long supportRequestId, String title, String description,
+                                        SupportRequestState state, java.time.LocalDateTime createdAt,
+                                        String teamName, Long mentorId, String mentorName,
+                                        Long hackathonId, String hackathonName) {}
 }

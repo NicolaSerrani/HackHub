@@ -2,6 +2,7 @@ package it.unicam.cs.hackhub.service;
 
 import it.unicam.cs.hackhub.model.entity.*;
 import it.unicam.cs.hackhub.model.enumeration.InvitationType;
+import it.unicam.cs.hackhub.model.enumeration.InvitationState;
 import it.unicam.cs.hackhub.repository.HackathonRepository;
 import it.unicam.cs.hackhub.repository.InvitationRepository;
 import it.unicam.cs.hackhub.repository.UserRepository;
@@ -30,6 +31,19 @@ public class InvitationService {
     public List<Invitation> viewReceivedInvitations(Long userId) {
         userService.requireCurrentUser(userId);
         return invitations.findByReceiver_UserId(userId);
+    }
+
+    public List<InvitationDetails> viewReceivedInvitationDetails(Long userId) {
+        return viewReceivedInvitations(userId).stream().map(invitation -> {
+            List<String> hackathonNames = invitation.getHackathon() != null
+                    ? List.of(invitation.getHackathon().getName())
+                    : invitation.getTeam() == null ? List.of() : invitation.getTeam().getRegistrations().stream()
+                    .filter(it.unicam.cs.hackhub.model.entity.Registration::isActive)
+                    .map(registration -> registration.getHackathon().getName()).distinct().toList();
+            return new InvitationDetails(invitation.getInvitationId(), invitation.getType(), invitation.getState(),
+                    invitation.getSentAt(), invitation.isPending(), invitation.isAccepted(), invitation.isRejected(),
+                    invitation.getTeam() == null ? null : invitation.getTeam().getName(), hackathonNames);
+        }).toList();
     }
 
     public Invitation acceptTeamInvitation(Long invitationId) {
@@ -87,4 +101,8 @@ public class InvitationService {
         if (invitation.getHackathon() == null) throw new IllegalStateException("Invitation has no hackathon");
         return invitation.getHackathon();
     }
+
+    public record InvitationDetails(Long invitationId, InvitationType type, InvitationState state,
+                                    java.time.LocalDateTime sentAt, boolean pending, boolean accepted, boolean rejected,
+                                    String teamName, List<String> hackathonNames) {}
 }

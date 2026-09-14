@@ -3,6 +3,8 @@ package it.unicam.cs.hackhub.service;
 import it.unicam.cs.hackhub.model.entity.Evaluation;
 import it.unicam.cs.hackhub.model.entity.Submission;
 import it.unicam.cs.hackhub.model.entity.Judge;
+import it.unicam.cs.hackhub.model.entity.Team;
+import it.unicam.cs.hackhub.model.entity.Hackathon;
 import it.unicam.cs.hackhub.model.enumeration.SubmissionState;
 import it.unicam.cs.hackhub.repository.EvaluationRepository;
 import it.unicam.cs.hackhub.repository.SubmissionRepository;
@@ -51,4 +53,20 @@ public class EvaluationService {
         Evaluation evaluation = judge.evaluateSubmission(submission, score, comment);
         return evaluationRepository.save(evaluation);
     }
+
+    public EvaluationResult evaluateSubmissionWithDetails(Long submissionId, Long judgeId,
+                                                           double score, String comment) {
+        Evaluation evaluation = evaluateSubmission(submissionId, judgeId, score, comment);
+        Submission submission = evaluation.getSubmission();
+        Team team = submission.getTeam();
+        Hackathon hackathon = submission.getHackathon();
+        return new EvaluationResult(evaluation.getEvaluationId(), evaluation.getScore(), evaluation.getComment(),
+                evaluation.getEvaluationDate(), submission.getSubmissionId(), submission.getTitle(),
+                team.getTeamId(), team.getName(), hackathon.getHackathonId(), hackathon.getName());
+    }
+
+    public record EvaluationResult(Long evaluationId, double score, String comment,
+                                   java.time.LocalDateTime evaluationDate, Long submissionId,
+                                   String submissionTitle, Long teamId, String teamName,
+                                   Long hackathonId, String hackathonName) {}
 }

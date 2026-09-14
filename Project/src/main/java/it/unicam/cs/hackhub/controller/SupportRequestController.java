@@ -26,23 +26,23 @@ public class SupportRequestController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public SupportRequest createSupportRequest(@RequestBody CreateSupportRequest request) {
-        return supportRequestService.createSupportRequest(request.teamId(), request.mentorId(), request.hackathonId(),
+    public SupportRequestService.SupportRequestDetails createSupportRequest(@RequestBody CreateSupportRequest request) {
+        return supportRequestService.createSupportRequestWithDetails(request.teamId(), request.mentorId(), request.hackathonId(),
                 request.title(), request.description());
     }
 
     @GetMapping("/mentor/{mentorId}")
-    public List<SupportRequest> viewMentorRequests(@PathVariable Long mentorId) {
+    public List<SupportRequest> viewMentorRequests(@PathVariable("mentorId") Long mentorId) {
         return supportRequestService.viewSupportRequests(mentorId);
     }
 
     @GetMapping("/hackathon/{hackathonId}")
-    public List<SupportRequest> viewHackathonRequests(@PathVariable Long hackathonId) {
+    public List<SupportRequest> viewHackathonRequests(@PathVariable("hackathonId") Long hackathonId) {
         return supportRequestService.viewHackathonSupportRequests(hackathonId);
     }
 
     @PutMapping("/{requestId}")
-    public SupportRequest manageSupportRequest(@PathVariable Long requestId, @RequestBody ManageRequest request) {
+    public SupportRequest manageSupportRequest(@PathVariable("requestId") Long requestId, @RequestBody ManageRequest request) {
         return supportRequestService.manageSupportRequest(requestId, request.response(), request.state());
     }
 

@@ -116,6 +116,26 @@ public class DemoDataInitializer implements CommandLineRunner {
         hackathons.declareWinner(finals.getHackathonId(), team.getTeamId());
         hackathons.publishLeaderboard(finals.getHackathonId());
         users.logout();
+
+        users.login("sofia.romano@hackhub.local", "password123");
+        var lifecycle = hackathons.createHackathon(hackathon("Evaluation Arena", "Camerino", 4, 7, 2500));
+        var lifecycleJudgeInvitation = hackathons.addJudge(lifecycle.getHackathonId(), 4L);
+        users.logout();
+        users.login("luca.ferrari@hackhub.local", "password123");
+        invitations.acceptJudgeInvitation(lifecycleJudgeInvitation.getInvitationId());
+        users.logout();
+        users.login("marco.rossi@hackhub.local", "password123");
+        hackathons.registerTeam(lifecycle.getHackathonId(), team.getTeamId());
+        var lifecycleSubmission = submissions.saveDraft(team.getTeamId(), lifecycle.getHackathonId(), "Lifecycle Project",
+                "Submission pronta per il flusso organizer", "https://github.com/example/lifecycle-project");
+        submissions.submitSubmission(lifecycleSubmission.getSubmissionId());
+        users.logout();
+        users.login("sofia.romano@hackhub.local", "password123");
+        hackathons.changeState(lifecycle.getHackathonId(), it.unicam.cs.hackhub.model.enumeration.HackathonState.UNDER_EVALUATION);
+        users.logout();
+        users.login("luca.ferrari@hackhub.local", "password123");
+        evaluations.evaluateSubmission(lifecycleSubmission.getSubmissionId(), 4L, 8.5, "Pronta per la proclamazione");
+        users.logout();
     }
 
     private void seedUsers() {

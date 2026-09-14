@@ -31,18 +31,18 @@ public class SubmissionController {
     }
 
     @PostMapping("/{submissionId}/submit")
-    public Submission submitSubmission(@PathVariable Long submissionId) {
+    public Submission submitSubmission(@PathVariable("submissionId") Long submissionId) {
         return submissionService.submitSubmission(submissionId);
     }
 
     @PutMapping("/{submissionId}")
-    public Submission updateSubmission(@PathVariable Long submissionId, @RequestBody SubmissionData request) {
+    public Submission updateSubmission(@PathVariable("submissionId") Long submissionId, @RequestBody SubmissionData request) {
         return submissionService.updateSubmission(submissionId, request.title(), request.description(),
                 request.repositoryUrl());
     }
 
     @GetMapping("/hackathon/{hackathonId}")
-    public List<Submission> viewSubmissions(@PathVariable Long hackathonId) {
+    public List<Submission> viewSubmissions(@PathVariable("hackathonId") Long hackathonId) {
         return submissionService.viewSubmissions(hackathonId);
     }
 

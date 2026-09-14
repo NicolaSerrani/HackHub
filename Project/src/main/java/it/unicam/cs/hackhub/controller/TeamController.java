@@ -30,19 +30,19 @@ public class TeamController {
     }
 
     @GetMapping("/{teamId}")
-    public Team getTeam(@PathVariable Long teamId) {
+    public Team getTeam(@PathVariable("teamId") Long teamId) {
         return teamService.findTeam(teamId);
     }
 
     @PostMapping("/{teamId}/invitations")
     @ResponseStatus(HttpStatus.CREATED)
-    public List<Invitation> inviteUsers(@PathVariable Long teamId, @RequestBody InviteUsersRequest request) {
+    public List<Invitation> inviteUsers(@PathVariable("teamId") Long teamId, @RequestBody InviteUsersRequest request) {
         return teamService.inviteUsers(teamId, request.userIds());
     }
 
     @PostMapping("/{teamId}/violations")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void reportViolation(@PathVariable Long teamId, @RequestBody ViolationRequest request) {
+    public void reportViolation(@PathVariable("teamId") Long teamId, @RequestBody ViolationRequest request) {
         teamService.reportViolation(teamId, request.mentorId(), request.description());
     }
 

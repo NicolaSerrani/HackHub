@@ -1,6 +1,5 @@
 package it.unicam.cs.hackhub.controller;
 
-import it.unicam.cs.hackhub.model.entity.Evaluation;
 import it.unicam.cs.hackhub.service.EvaluationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,9 +20,9 @@ public class EvaluationController {
 
     @PostMapping("/{submissionId}/evaluation")
     @ResponseStatus(HttpStatus.CREATED)
-    public Evaluation evaluateSubmission(@PathVariable Long submissionId,
+    public EvaluationService.EvaluationResult evaluateSubmission(@PathVariable("submissionId") Long submissionId,
                                          @RequestBody EvaluationRequest request) {
-        return evaluationService.evaluateSubmission(submissionId, request.judgeId(),
+        return evaluationService.evaluateSubmissionWithDetails(submissionId, request.judgeId(),
                 request.score(), request.comment());
     }
 

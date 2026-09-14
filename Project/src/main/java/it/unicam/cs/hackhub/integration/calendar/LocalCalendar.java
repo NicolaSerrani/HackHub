@@ -2,6 +2,7 @@ package it.unicam.cs.hackhub.integration.calendar;
 
 import it.unicam.cs.hackhub.model.entity.Call;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,10 +14,10 @@ public class LocalCalendar implements Calendar {
     private final List<LocalDateTime> availableTimeSlots = new ArrayList<>();
 
     public LocalCalendar() {
-        LocalDateTime firstSlot = LocalDateTime.now().plusDays(1).withSecond(0).withNano(0);
-        availableTimeSlots.add(firstSlot);
-        availableTimeSlots.add(firstSlot.plusHours(1));
-        availableTimeSlots.add(firstSlot.plusHours(2));
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        availableTimeSlots.add(tomorrow.atTime(9, 0));
+        availableTimeSlots.add(tomorrow.atTime(11, 0));
+        availableTimeSlots.add(tomorrow.atTime(14, 0));
     }
 
     @Override

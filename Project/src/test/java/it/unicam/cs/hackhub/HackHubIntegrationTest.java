@@ -8,8 +8,11 @@ import it.unicam.cs.hackhub.repository.TeamRepository;
 import it.unicam.cs.hackhub.repository.UserRepository;
 import it.unicam.cs.hackhub.service.HackathonService;
 import it.unicam.cs.hackhub.service.EvaluationService;
+import it.unicam.cs.hackhub.service.InvitationService;
+import it.unicam.cs.hackhub.service.SupportRequestService;
 import it.unicam.cs.hackhub.service.TeamService;
 import it.unicam.cs.hackhub.service.UserService;
+import it.unicam.cs.hackhub.integration.calendar.LocalCalendar;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +36,9 @@ class HackHubIntegrationTest {
     @Autowired private HackathonRepository hackathonRepository;
     @Autowired private RegistrationRepository registrationRepository;
     @Autowired private EvaluationService evaluationService;
+    @Autowired private InvitationService invitationService;
+    @Autowired private SupportRequestService supportRequestService;
+    @Autowired private LocalCalendar localCalendar;
 
     @AfterEach
     void clearSession() {
@@ -40,6 +46,16 @@ class HackHubIntegrationTest {
             userService.logout();
         } catch (IllegalStateException ignored) {
         }
+    }
+
+    @Test
+    void findsTheJavaProcessListeningOnTheApplicationPort() {
+        assertThat(HackHubApplication.listenerPid(
+                "TCP    0.0.0.0:8888           0.0.0.0:0              LISTENING       15616"))
+                .contains(15616L);
+        assertThat(HackHubApplication.listenerPid(
+                "TCP    0.0.0.0:8080           0.0.0.0:0              LISTENING       15616"))
+                .isEmpty();
     }
 
     @Test
@@ -140,6 +156,17 @@ class HackHubIntegrationTest {
     }
 
     @Test
+    void registersATeamByExistingHackathonName() {
+        userService.login("marco.rossi@hackhub.local", "password123");
+
+        assertThat(hackathonService.registerTeam("Future Tech Challenge", 1L).getRegistrationId()).isNotNull();
+        assertThatThrownBy(() -> hackathonService.registerTeam("", 1L))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("Hackathon name is required");
+        assertThatThrownBy(() -> hackathonService.registerTeam("Missing Hackathon", 1L))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("Hackathon not found");
+    }
+
+    @Test
     void showsAllTeamsOnlyForAPublishedCompletedLeaderboard() {
         userService.login("giulia.bianchi@hackhub.local", "password123");
 
@@ -148,5 +175,28 @@ class HackHubIntegrationTest {
         assertThatThrownBy(() -> hackathonService.getLeaderboard(1L))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("The final leaderboard is not available yet");
+    }
+
+    @Test
+    void seedsAnOrganizerLifecycleReadyToDeclareAWinner() {
+        userService.login("sofia.romano@hackhub.local", "password123");
+        assertThat(hackathonService.declareWinner(5L, 1L).getWinner().getName()).isEqualTo("Byte Builders");
+    }
+
+    @Test
+    void exposesContextualDetailsForPostman() {
+        userService.login("anna.verdi@hackhub.local", "password123");
+        var invitation = invitationService.viewReceivedInvitationDetails(8L).getFirst();
+        assertThat(invitation.teamName()).isEqualTo("Byte Builders");
+        assertThat(invitation.hackathonNames()).contains("HackHub Demo");
+        userService.logout();
+
+        userService.login("marco.rossi@hackhub.local", "password123");
+        var support = supportRequestService.createSupportRequestWithDetails(
+                1L, 3L, 1L, "Test output", "Verifica dei dettagli");
+        assertThat(support.mentorName()).isEqualTo("Elena Conti");
+        assertThat(support.hackathonName()).isEqualTo("HackHub Demo");
+        assertThat(localCalendar.getAvailableTimeSlots()).extracting(slot -> slot.getHour())
+                .containsExactly(9, 11, 14);
     }
 }

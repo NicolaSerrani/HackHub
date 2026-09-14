@@ -42,39 +42,41 @@ public class HackathonController {
         return hackathonService.createHackathon(builder);
     }
 
-    @PostMapping("/{hackathonId}/teams/{teamId}")
+    @PostMapping("/teams/{teamId}")
     @ResponseStatus(HttpStatus.CREATED)
-    public Registration registerTeam(@PathVariable Long hackathonId, @PathVariable Long teamId) {
-        return hackathonService.registerTeam(hackathonId, teamId);
+    public RegistrationResponse registerTeam(@PathVariable("teamId") Long teamId,
+                                             @RequestBody RegisterTeamRequest request) {
+        Registration registration = hackathonService.registerTeam(request.hackathonName(), teamId);
+        return new RegistrationResponse(registration.getRegistrationId(), request.hackathonName().trim(), teamId);
     }
 
     @PostMapping("/{hackathonId}/mentors/{mentorId}")
-    public Invitation addMentor(@PathVariable Long hackathonId, @PathVariable Long mentorId) {
+    public Invitation addMentor(@PathVariable("hackathonId") Long hackathonId, @PathVariable("mentorId") Long mentorId) {
         return hackathonService.addMentor(hackathonId, mentorId);
     }
 
     @PostMapping("/teams/{teamId}/mentor/{mentorId}")
-    public Team addMentorToTeam(@PathVariable Long teamId, @PathVariable Long mentorId) {
+    public Team addMentorToTeam(@PathVariable("teamId") Long teamId, @PathVariable("mentorId") Long mentorId) {
         return hackathonService.addMentorToTeam(teamId, mentorId);
     }
 
     @PostMapping("/{hackathonId}/judges/{judgeId}")
-    public Invitation addJudge(@PathVariable Long hackathonId, @PathVariable Long judgeId) {
+    public Invitation addJudge(@PathVariable("hackathonId") Long hackathonId, @PathVariable("judgeId") Long judgeId) {
         return hackathonService.addJudge(hackathonId, judgeId);
     }
 
     @PutMapping("/{hackathonId}/state")
-    public Hackathon changeState(@PathVariable Long hackathonId, @RequestBody StateRequest request) {
+    public Hackathon changeState(@PathVariable("hackathonId") Long hackathonId, @RequestBody StateRequest request) {
         return hackathonService.changeState(hackathonId, request.state());
     }
 
     @PostMapping("/{hackathonId}/winner/{teamId}")
-    public Hackathon declareWinner(@PathVariable Long hackathonId, @PathVariable Long teamId) {
+    public Hackathon declareWinner(@PathVariable("hackathonId") Long hackathonId, @PathVariable("teamId") Long teamId) {
         return hackathonService.declareWinner(hackathonId, teamId);
     }
 
     @PostMapping("/{hackathonId}/leaderboard/publish")
-    public Hackathon publishLeaderboard(@PathVariable Long hackathonId) {
+    public Hackathon publishLeaderboard(@PathVariable("hackathonId") Long hackathonId) {
         return hackathonService.publishLeaderboard(hackathonId);
     }
 
@@ -84,7 +86,7 @@ public class HackathonController {
     }
 
     @PostMapping("/{hackathonId}/prize")
-    public Payment awardPrize(@PathVariable Long hackathonId) {
+    public Payment awardPrize(@PathVariable("hackathonId") Long hackathonId) {
         return hackathonService.awardPrize(hackathonId);
     }
 
@@ -94,17 +96,17 @@ public class HackathonController {
     }
 
     @GetMapping("/{hackathonId}")
-    public Hackathon getHackathonDetails(@PathVariable Long hackathonId) {
+    public Hackathon getHackathonDetails(@PathVariable("hackathonId") Long hackathonId) {
         return hackathonService.getHackathonDetails(hackathonId);
     }
 
     @GetMapping("/{hackathonId}/teams")
-    public List<Team> viewRegisteredTeams(@PathVariable Long hackathonId) {
+    public List<Team> viewRegisteredTeams(@PathVariable("hackathonId") Long hackathonId) {
         return hackathonService.viewRegisteredTeams(hackathonId);
     }
 
     @GetMapping("/teams/{teamId}/available-mentors")
-    public List<Mentor> viewAvailableMentors(@PathVariable Long teamId) {
+    public List<Mentor> viewAvailableMentors(@PathVariable("teamId") Long teamId) {
         return hackathonService.viewAvailableMentors(teamId);
     }
 
@@ -112,4 +114,6 @@ public class HackathonController {
                                          LocalDate registrationDeadline, LocalDate startDate,
                                          LocalDate endDate, double prize, int maxTeamMembers) {}
     public record StateRequest(HackathonState state) {}
+    public record RegisterTeamRequest(String hackathonName) {}
+    public record RegistrationResponse(Long registrationId, String hackathonName, Long teamId) {}
 }
