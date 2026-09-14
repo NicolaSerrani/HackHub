@@ -138,4 +138,15 @@ class HackHubIntegrationTest {
 
         userService.logout();
     }
+
+    @Test
+    void showsAllTeamsOnlyForAPublishedCompletedLeaderboard() {
+        userService.login("giulia.bianchi@hackhub.local", "password123");
+
+        assertThat(hackathonService.getLeaderboard(4L))
+                .containsExactly("Byte Builders", "Code Comets", "Nova Bytes");
+        assertThatThrownBy(() -> hackathonService.getLeaderboard(1L))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("The final leaderboard is not available yet");
+    }
 }

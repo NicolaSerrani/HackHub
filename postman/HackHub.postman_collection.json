@@ -163,6 +163,18 @@
                                       "item":  [
                                                    {
                                                        "name":  "Visualizza inviti ricevuti",
+                                                       "event":  [
+                                                                     {
+                                                                         "listen":  "test",
+                                                                         "script":  {
+                                                                                        "exec":  [
+                                                                                                     "const invitation = pm.response.json().find(item => item.pending && item.type === \"Team Invitation\");",
+                                                                                                     "if (invitation) pm.collectionVariables.set(\"invitationId\", invitation.invitationId);"
+                                                                                                 ],
+                                                                                        "type":  "text/javascript"
+                                                                                    }
+                                                                     }
+                                                                 ],
                                                        "request":  {
                                                                        "method":  "GET",
                                                                        "header":  [
@@ -183,7 +195,7 @@
                                                                        "header":  [
 
                                                                                   ],
-                                                                       "url":  "{{baseUrl}}/api/hackathons/{{hackathonId}}/leaderboard"
+                                                                       "url":  "{{baseUrl}}/api/hackathons/{{lifecycleHackathonId}}/leaderboard"
                                                                    }
                                                    }
                                                ]
@@ -266,6 +278,17 @@
                                       "item":  [
                                                    {
                                                        "name":  "Invita utenti",
+                                                       "event":  [
+                                                                     {
+                                                                         "listen":  "test",
+                                                                         "script":  {
+                                                                                        "exec":  [
+                                                                                                     "pm.collectionVariables.set(\"invitationId\", pm.response.json()[0].invitationId);"
+                                                                                                 ],
+                                                                                        "type":  "text/javascript"
+                                                                                    }
+                                                                     }
+                                                                 ],
                                                        "request":  {
                                                                        "method":  "POST",
                                                                        "header":  [

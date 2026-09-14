@@ -111,9 +111,13 @@ public class HackathonService {
     }
 
     @Transactional(readOnly = true)
-    public List<Team> getLeaderboard(Long hackathonId) {
+    public List<String> getLeaderboard(Long hackathonId) {
         userService.requireAuthenticated();
-        return findHackathon(hackathonId).getLeaderboard();
+        Hackathon hackathon = findHackathon(hackathonId);
+        if (hackathon.getState() != HackathonState.COMPLETED || !hackathon.isLeaderboardPublished()) {
+            throw new IllegalStateException("The final leaderboard is not available yet");
+        }
+        return hackathon.getLeaderboard().stream().map(Team::getName).toList();
     }
 
     public Payment awardPrize(Long hackathonId) {

@@ -22,6 +22,7 @@ import it.unicam.cs.hackhub.model.enumeration.HackathonState;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Collections;
 import java.util.List;
 
@@ -202,11 +203,15 @@ public class Hackathon {
     }
     @JsonIgnore
     public List<Team> getLeaderboard() {
-        if (winner == null) {
-            return Collections.emptyList();
-        }
+        return registrations.stream().filter(Registration::isActive).map(Registration::getTeam)
+                .sorted(Comparator.comparingDouble(this::teamScore).reversed()
+                        .thenComparing(Team::getName)).toList();
+    }
 
-        return Collections.singletonList(winner);
+    private double teamScore(Team team) {
+        return submissions.stream().filter(submission -> submission.getTeam().equals(team))
+                .map(Submission::getEvaluation).filter(java.util.Objects::nonNull)
+                .mapToDouble(Evaluation::getScore).max().orElse(-1);
     }
 
     public HackathonState getState() {

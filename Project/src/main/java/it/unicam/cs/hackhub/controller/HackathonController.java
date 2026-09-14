@@ -79,7 +79,7 @@ public class HackathonController {
     }
 
     @GetMapping("/{hackathonId}/leaderboard")
-    public List<Team> getLeaderboard(@PathVariable Long hackathonId) {
+    public List<String> getLeaderboard(@PathVariable("hackathonId") Long hackathonId) {
         return hackathonService.getLeaderboard(hackathonId);
     }
 

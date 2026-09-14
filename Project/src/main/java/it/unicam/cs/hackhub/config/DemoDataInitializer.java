@@ -90,11 +90,31 @@ public class DemoDataInitializer implements CommandLineRunner {
                 "Submission già valutata per i test organizer", "https://github.com/example/final-project");
         submissions.submitSubmission(finalist.getSubmissionId());
         users.logout();
+        users.login("giulia.bianchi@hackhub.local", "password123");
+        var codeComets = teams.createTeam("Code Comets");
+        hackathons.registerTeam(finals.getHackathonId(), codeComets.getTeamId());
+        var secondFinalist = submissions.saveDraft(codeComets.getTeamId(), finals.getHackathonId(), "Comet Project",
+                "Submission per la classifica finale", "https://github.com/example/comet-project");
+        submissions.submitSubmission(secondFinalist.getSubmissionId());
+        users.logout();
+        users.login("francesca.neri@hackhub.local", "password123");
+        var novaBytes = teams.createTeam("Nova Bytes");
+        hackathons.registerTeam(finals.getHackathonId(), novaBytes.getTeamId());
+        var thirdFinalist = submissions.saveDraft(novaBytes.getTeamId(), finals.getHackathonId(), "Nova Project",
+                "Submission per la classifica finale", "https://github.com/example/nova-project");
+        submissions.submitSubmission(thirdFinalist.getSubmissionId());
+        users.logout();
         users.login("sofia.romano@hackhub.local", "password123");
         hackathons.changeState(finals.getHackathonId(), it.unicam.cs.hackhub.model.enumeration.HackathonState.UNDER_EVALUATION);
         users.logout();
         users.login("luca.ferrari@hackhub.local", "password123");
         evaluations.evaluateSubmission(finalist.getSubmissionId(), 4L, 9, "Submission finale verificata");
+        evaluations.evaluateSubmission(secondFinalist.getSubmissionId(), 4L, 8, "Seconda classificata");
+        evaluations.evaluateSubmission(thirdFinalist.getSubmissionId(), 4L, 7, "Terza classificata");
+        users.logout();
+        users.login("sofia.romano@hackhub.local", "password123");
+        hackathons.declareWinner(finals.getHackathonId(), team.getTeamId());
+        hackathons.publishLeaderboard(finals.getHackathonId());
         users.logout();
     }
 
@@ -109,7 +129,8 @@ public class DemoDataInitializer implements CommandLineRunner {
                 {"Paolo Greco", "paolo.greco@hackhub.local", "STAFF"},
                 {"Anna Verdi", "anna.verdi@hackhub.local", "USER"},
                 {"Carlo Blu", "carlo.blu@hackhub.local", "STAFF"},
-                {"Davide Gialli", "davide.gialli@hackhub.local", "USER"}
+                {"Davide Gialli", "davide.gialli@hackhub.local", "USER"},
+                {"Francesca Neri", "francesca.neri@hackhub.local", "USER"}
         };
         for (String[] user : data) {
             if (!userRepository.existsByEmailIgnoreCase(user[1])) {
